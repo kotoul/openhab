@@ -27,10 +27,9 @@ public class Zkouska {
 	// provide public static methods here
 	
 	// Example
-	@ActionDoc(text="A cool method that does some Zkouska", 
-			returns="<code>true</code>, if successful and <code>false</code> otherwise.")
+	@ActionDoc(text="A cool method that does some Zkouska")
 	public static boolean doZkouska(
-			@ParamDoc(name="something", text="the something to do") String something) {
+			@ParamDoc(name="something") String something) {
 		
 		if (!ZkouskaActionService.isProperlyConfigured) {
 			logger.debug("Zkouska action is not yet configured - execution aborted!");
@@ -40,6 +39,27 @@ public class Zkouska {
 		logger.debug("Zkouska action IS properly configured - execution started!");
 		logger.info(something);
 		return true;
+	}
+	
+	@ActionDoc(text="A cool method that does some Zkouska")
+	public static float doConvert(
+			@ParamDoc(name="Dow Jones as String") String dowJonesString) {
+		
+		float dowJones = 0;
+		
+		if (dowJonesString != null) {
+			if (dowJonesString.contains(",")) {
+				dowJonesString = dowJonesString.replace(",","");
+			}
+			try {
+				dowJones = Float.parseFloat(dowJonesString);
+				logger.debug(dowJonesString + " successfuly converted to float: " + dowJones);
+			} catch (NumberFormatException e) {
+				logger.debug("Cannot convert " + dowJonesString + " to float");
+			}
+		}
+		
+		return dowJones;
 	}
 
 }

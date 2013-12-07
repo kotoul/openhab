@@ -6,7 +6,7 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  */
-package org.openhab.action.zkouska.internal;
+package org.openhab.action.floatjones.internal;
 
 import java.util.Dictionary;
 
@@ -18,14 +18,14 @@ import org.slf4j.LoggerFactory;
 	
 
 /**
- * This class registers an OSGi service for the Zkouska action.
+ * This class registers an OSGi service for the FloatJones action.
  * 
  * @author tomk
  * @since 1.4.0
  */
-public class ZkouskaActionService implements ActionService, ManagedService {
+public class FloatJonesActionService implements ActionService, ManagedService {
 
-	private static final Logger logger = LoggerFactory.getLogger(ZkouskaActionService.class);
+	private static final Logger logger = LoggerFactory.getLogger(FloatJonesActionService.class);
 
 	/**
 	 * Indicates whether this action is properly configured which means all
@@ -34,7 +34,7 @@ public class ZkouskaActionService implements ActionService, ManagedService {
 	 */
 	/* default */ static boolean isProperlyConfigured = false;
 	
-	public ZkouskaActionService() {
+	public FloatJonesActionService() {
 	}
 	
 	public void activate() {
@@ -47,12 +47,12 @@ public class ZkouskaActionService implements ActionService, ManagedService {
 
 	@Override
 	public String getActionClassName() {
-		return Zkouska.class.getCanonicalName();
+		return FloatJones.class.getCanonicalName();
 	}
 
 	@Override
 	public Class<?> getActionClass() {
-		return Zkouska.class;
+		return FloatJones.class;
 	}
 
 	/**

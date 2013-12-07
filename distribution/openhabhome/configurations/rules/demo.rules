@@ -2,6 +2,9 @@ import org.openhab.core.library.types.*
 import org.openhab.core.persistence.*
 import org.openhab.model.script.actions.*
 
+//var Number counter = 1
+var Number last = 1.0
+
 rule Startup
 when 
 	System started
@@ -16,6 +19,28 @@ then
 	doZkouska("Good bye!")
 end
 
+rule DowJones
+when
+	Item DowJones received update
+then
+	setFloatJones(doConvert(DowJones.state.toString()))
+	sendCommand(DowJonesNum, floatJones)
+	
+	if (DowJonesNum.state != last) {
+		if (DowJonesNum.state < last) {
+			sendCommand(Pom, -1)
+		}
+		else {
+			sendCommand(Pom, 1)
+		}
+		
+		var Number curr = new DecimalType(DowJonesNum.state.toString())
+		sendCommand(DowJonesString, calcChange(last.floatValue, curr.floatValue))
+		last = curr
+	}
+end
+
+/* 
 rule "Crontest"
 when 
 	Time cron "0/15 * * * * ?"
@@ -27,10 +52,11 @@ then
 	
 	counter = counter + 1
 end	
-
+ 
 rule TestString
 when
 	Item TestS received update
 then
 	doZkouska("TestS updatovan: " + TestS.state)
 end
+*/

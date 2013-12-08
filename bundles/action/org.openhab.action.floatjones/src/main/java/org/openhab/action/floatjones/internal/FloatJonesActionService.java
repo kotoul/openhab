@@ -66,6 +66,7 @@ public class FloatJonesActionService implements ActionService, ManagedService {
 
 			isProperlyConfigured = true;
 		}
+		FloatJones.prevDowJones = 1;
 		isProperlyConfigured = true;
 	}
 	

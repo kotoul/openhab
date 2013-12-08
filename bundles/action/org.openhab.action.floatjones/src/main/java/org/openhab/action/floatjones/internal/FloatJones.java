@@ -25,28 +25,34 @@ public class FloatJones {
 	private static final Logger logger = LoggerFactory.getLogger(FloatJones.class);
 
 	static float dowJones;
+	static float prevDowJones;
 	
 	@ActionDoc(text="A cool method that does some FloatJones")
 	public static void setFloatJones(
-			@ParamDoc(name="Dow Jones as Float") float dowJones) {
+			@ParamDoc(name="new value") float dowJones) {
 		
+		if (prevDowJones != FloatJones.dowJones) {
+			logger.debug("prev float jones set from " + prevDowJones + " to " + FloatJones.dowJones);
+			prevDowJones = FloatJones.dowJones;
+		}
 		FloatJones.dowJones = dowJones;
+		logger.debug("new float jones is " + FloatJones.dowJones);
+	}
+	
+	@ActionDoc(text="A cool method that does some FloatJones", returns="-1 -> decreased, 1 -> increased")
+	public static int valueIncreased() {
+		
+		boolean increased = prevDowJones < dowJones;
+		logger.debug("value increased: " + increased);
+		return increased ? 1 : -1;
 	}
 	
 	@ActionDoc(text="A cool method that does some FloatJones")
-	public static float getFloatJones() {
+	public static String calcChange() {
 		
-		return dowJones;
-	}
-	
-	@ActionDoc(text="A cool method that does some FloatJones")
-	public static String calcChange(
-			@ParamDoc(name="Last value") float prev, 
-			@ParamDoc(name="New value") float now) {
-		
-		String result = String.format("%.2f", now - prev);
-		result += String.format(" (%.2f%%)", (now - prev) * 100 / prev);
-		logger.debug("returning " + result);
+		String result = String.format("%.2f", dowJones - prevDowJones);
+		result += String.format(" (%.2f%%)", (dowJones - prevDowJones) * 100 / prevDowJones);
+		logger.debug("calcChange returning " + result);
 		return result;
 	}
 }

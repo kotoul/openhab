@@ -1,7 +1,7 @@
 sitemap demo label="Main Menu"
 {
 	Frame {
-		Text item=DowJonesNum
+		Text item=DowJones
 		Text item=DowJonesString valuecolor=[Pom==-1="red",Pom==1="green"]
 	}
 	Frame label="Date" {

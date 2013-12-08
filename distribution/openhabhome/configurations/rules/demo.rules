@@ -3,7 +3,6 @@ import org.openhab.core.persistence.*
 import org.openhab.model.script.actions.*
 
 //var Number counter = 1
-var Number last = 1.0
 
 rule Startup
 when 
@@ -23,21 +22,10 @@ rule DowJones
 when
 	Item DowJones received update
 then
-	setFloatJones(doConvert(DowJones.state.toString()))
-	sendCommand(DowJonesNum, floatJones)
-	
-	if (DowJonesNum.state != last) {
-		if (DowJonesNum.state < last) {
-			sendCommand(Pom, -1)
-		}
-		else {
-			sendCommand(Pom, 1)
-		}
+	setFloatJones( doConvert(DowJones.state.toString()) )
 		
-		var Number curr = new DecimalType(DowJonesNum.state.toString())
-		sendCommand(DowJonesString, calcChange(last.floatValue, curr.floatValue))
-		last = curr
-	}
+	sendCommand(Pom, valueIncreased)
+	sendCommand(DowJonesString, calcChange)
 end
 
 /* 

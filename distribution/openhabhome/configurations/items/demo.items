@@ -6,5 +6,5 @@ DateTime Date "Date and Time: [%1$tA, %1$td.%1$tm.%1$tY %1$tT]" (date) { ntp="Eu
 
 Number Pom (pom)
 
-String DowJones "Dow Jones value [%s]" <chart> (all) { http="<[https://www.google.com/finance?q=INDEXDJX:.DJI:120000:REGEX(.*?<span id=\"ref_983582_l\">(.*?)</span>.*)]" }
+String DowJones "Dow Jones value [%s]" <chart> (all) { http="<[https://www.google.com/finance?q=INDEXFTSE:30000:REGEX(.*?<span id=\"ref_12590587_l\">(.*?)</span>.*)]" }
 String DowJonesString "Dow Jones hist [%s]" <chart> (all)

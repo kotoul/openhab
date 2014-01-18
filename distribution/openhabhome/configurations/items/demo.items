@@ -1,10 +1,9 @@
 Group all
 Group date
-Group pom
 
-DateTime Date "Date and Time: [%1$tA, %1$td.%1$tm.%1$tY %1$tT]" (date) { ntp="Europe/Prague" }
+DateTime Date "Date and Time: [%1$tA, %1$td.%1$tm.%1$tY]" (date) { ntp="Europe/Prague" }
 
-Number Pom (pom)
+Number Temperature "Teplota [%d °C]" <temperature> (all) { xbee="<[rxresponse16@0002#0[int]]" }
 
-String DowJones "Dow Jones value [%s]" <chart> (all) { http="<[https://www.google.com/finance?q=INDEXFTSE:30000:REGEX(.*?<span id=\"ref_12590587_l\">(.*?)</span>.*)]" }
-String DowJonesString "Dow Jones hist [%s]" <chart> (all)
+Number Set "Setpoint [%d °C]" <smiley> (all) 
+Number Control "control [%d]" <smiley> (all) { xbee=">[0:txrequest16@0003#0] >[1:txrequest16@0003#1] >[2:txrequest16@0003#2]" }

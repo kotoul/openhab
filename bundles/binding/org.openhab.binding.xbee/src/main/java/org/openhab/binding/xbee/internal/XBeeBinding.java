@@ -60,8 +60,13 @@ import org.slf4j.LoggerFactory;
 import com.rapplogic.xbee.api.ErrorResponse;
 import com.rapplogic.xbee.api.PacketListener;
 import com.rapplogic.xbee.api.XBee;
+import com.rapplogic.xbee.api.XBeeAddress;
+import com.rapplogic.xbee.api.XBeeAddress16;
 import com.rapplogic.xbee.api.XBeeException;
+import com.rapplogic.xbee.api.XBeeRequest;
 import com.rapplogic.xbee.api.XBeeResponse;
+import com.rapplogic.xbee.api.wpan.RxResponse16;
+import com.rapplogic.xbee.api.wpan.TxRequest16;
 import com.rapplogic.xbee.api.zigbee.ZNetRxIoSampleResponse;
 import com.rapplogic.xbee.api.zigbee.ZNetRxResponse;
 
@@ -154,8 +159,44 @@ public class XBeeBinding extends AbstractBinding<XBeeBindingProvider> implements
 
 	@Override
 	protected void internalReceiveCommand(String itemName, Command command) {
-		logger.debug("internalReceiveCommand");
-		// TODO: Out-binding handling
+		XBeeBindingProvider provider = findFirstMatchingBindingProvider(itemName, command);
+
+		if (provider == null) {
+			logger.trace("doesn't find matching binding provider [itemName={}, command={}]", itemName, command);
+			return;
+		}
+		Class<? extends XBeeRequest> requestType = provider.getRequestType(itemName, command);
+		XBeeAddress address = provider.getAddress(itemName, command);
+		int[] payload = provider.getPayload(itemName, command);
+		
+		//logger.debug("internalReceivedCommad [reqType={}]", requestType);
+		if (requestType == TxRequest16.class) {
+			if (!(address instanceof XBeeAddress16)) {
+				logger.trace("wrong type of address [address={}]", address);
+				return;
+			}
+			TxRequest16 request = new TxRequest16((XBeeAddress16) address, payload);
+			//logger.debug("sending [request={}]", request);
+			try {
+				xbee.sendAsynchronous(request);
+			} catch (XBeeException e) {
+				logger.debug("ERROR: ", e);
+			}
+		}
+	}
+
+	private XBeeBindingProvider findFirstMatchingBindingProvider(String itemName, Command command) {
+		XBeeBindingProvider firstMatchingProvider = null;
+
+		for (XBeeBindingProvider provider : this.providers) {
+			Class<? extends XBeeRequest> reqType = provider.getRequestType(itemName, command);
+			if (reqType != null) {
+				firstMatchingProvider = provider;
+				break;
+			}
+		}
+
+		return firstMatchingProvider;
 	}
 
 	@Override
@@ -265,7 +306,7 @@ public class XBeeBinding extends AbstractBinding<XBeeBindingProvider> implements
 					for (int i : znetRxResponse.getData()) {
 						buffer.put((byte) i);
 					}
-					
+
 					// Check the first byte
 					if (provider.getFirstByte(itemName) != null && provider.getFirstByte(itemName) != buffer.get(0)) {
 						continue;
@@ -298,6 +339,30 @@ public class XBeeBinding extends AbstractBinding<XBeeBindingProvider> implements
 					} else {
 						logger.debug("Cannot create state of type {} for value {}", provider.getItemType(itemName),
 								buffer);
+						continue;
+					}
+				} else if (response.getClass() == RxResponse16.class) {
+					RxResponse16 response16 = (RxResponse16) response;
+
+					// Check the address
+					if (!response16.getRemoteAddress().equals(provider.getAddress(itemName))) {
+						continue;
+					}
+
+					char[] word = new char[response16.getData().length];
+					for (int i = 0; i < response16.getData().length; i++) {
+						word[i] = (char) response16.getData()[i];
+					}
+
+					// Cast according to the itemType
+					// TODO: Support more
+					if (provider.getItemType(itemName).isAssignableFrom(NumberItem.class)) {
+						if (provider.getDataType(itemName) == int.class) {
+							newState = new DecimalType(new String(word));
+						}
+					} else {
+						logger.debug("Cannot create state of type {} for value {}", provider.getItemType(itemName),
+								word);
 						continue;
 					}
 				} else {

@@ -40,6 +40,7 @@ import org.openhab.core.binding.BindingConfig;
 import org.openhab.core.items.Item;
 import org.openhab.core.library.types.StringType;
 import org.openhab.core.types.Command;
+import org.openhab.core.types.TypeParser;
 import org.openhab.model.item.binding.AbstractGenericBindingProvider;
 import org.openhab.model.item.binding.BindingConfigParseException;
 import org.openhab.model.item.binding.BindingConfigReader;
@@ -51,6 +52,8 @@ import com.rapplogic.xbee.api.XBeeAddress16;
 import com.rapplogic.xbee.api.XBeeAddress64;
 import com.rapplogic.xbee.api.XBeeRequest;
 import com.rapplogic.xbee.api.XBeeResponse;
+import com.rapplogic.xbee.api.wpan.RxResponse16;
+import com.rapplogic.xbee.api.wpan.TxRequest16;
 import com.rapplogic.xbee.api.zigbee.ZNetRxIoSampleResponse;
 import com.rapplogic.xbee.api.zigbee.ZNetRxResponse;
 
@@ -76,10 +79,11 @@ public class XBeeGenericBindingProvider extends AbstractGenericBindingProvider i
 
 	/** {@link Pattern} which matches for an RxResponse In-Binding */
 	private static final Pattern RXRESPONSE_IN_PATTERN = Pattern
-			.compile("<(?<responseType>\\w+)@(?<address>([0-9a-zA-Z])+)#(?<dataOffset>\\d+)(\\[(?<dataType>\\w+)\\])?(:(?<firstByte>\\d{1,3}))?");
+			.compile("<\\[(?<responseType>\\w+)@(?<address>([0-9a-zA-Z])+)#(?<dataOffset>\\d+)(\\[(?<dataType>\\w+)\\])?(:(?<firstByte>\\d{1,3}))?\\]");
 
 	/** {@link Pattern} which matches an Out-Binding */
-	private static final Pattern OUT_PATTERN = Pattern.compile(">");
+	private static final Pattern OUT_PATTERN = Pattern
+			.compile(">\\[(?<command>.*?):(?<requestType>\\w+)@(?<address>([0-9a-zA-Z])+)#(?<payload>.*?)\\]");
 
 	private static final Logger logger = LoggerFactory.getLogger(XBeeGenericBindingProvider.class);
 
@@ -136,6 +140,8 @@ public class XBeeGenericBindingProvider extends AbstractGenericBindingProvider i
 				// Parse the responseType
 				if (matcher.group("responseType").equals("znetrxresponse")) {
 					configElement.responseType = ZNetRxResponse.class;
+				} else if (matcher.group("responseType").equals("rxresponse16")) {
+					configElement.responseType = RxResponse16.class;
 				} else {
 					throw new BindingConfigParseException("Invalid binding configuration: responseType '"
 							+ matcher.group("responseType") + "' is not a valid responseType");
@@ -154,7 +160,28 @@ public class XBeeGenericBindingProvider extends AbstractGenericBindingProvider i
 			}
 		}
 		if (OUT_PATTERN.matcher(bindingConfig).matches()) {
-			// TODO: Out-bindings
+			Matcher matcher = OUT_PATTERN.matcher(bindingConfig);
+			while (matcher.find()) {
+				XBeeOutBindingConfigElement configElement = new XBeeOutBindingConfigElement();
+
+				Command command = createCommandFromString(item, matcher.group("command"));
+
+				// Parse the responseType
+				if (matcher.group("requestType").equals("txrequest16")) {
+					configElement.requestType = TxRequest16.class;
+				} else {
+					throw new BindingConfigParseException("Invalid binding configuration: requestType '"
+							+ matcher.group("requestType") + "' is not a valid requestType");
+				}
+
+				// Parse the address and payload
+				configElement.address = parseAddress(matcher.group("address"));
+				configElement.payload = parsePayload(matcher.group("payload"));
+
+				// Add to the config
+				logger.debug("Adding out-binding configElement: {}", configElement.toString());
+				config.put(command, configElement);
+			}
 		}
 		if (!IOSAMPLERESPONSE_IN_PATTERN.matcher(bindingConfig).matches()
 				&& !RXRESPONSE_IN_PATTERN.matcher(bindingConfig).matches()
@@ -163,6 +190,16 @@ public class XBeeGenericBindingProvider extends AbstractGenericBindingProvider i
 		}
 		logger.debug("Adding binding config for item {}", item.getName());
 		addBindingConfig(item, config);
+	}
+
+	private Command createCommandFromString(Item item, String commandAsString) throws BindingConfigParseException {
+		Command command = TypeParser.parseCommand(item.getAcceptedCommandTypes(), commandAsString);
+
+		if (command == null) {
+			throw new BindingConfigParseException("couldn't create Command from '" + commandAsString + "' ");
+		}
+
+		return command;
 	}
 
 	@Override
@@ -221,9 +258,23 @@ public class XBeeGenericBindingProvider extends AbstractGenericBindingProvider i
 	}
 
 	@Override
-	public XBeeRequest getRequest(String itemName, Command command) {
+	public Class<? extends XBeeRequest> getRequestType(String itemName, Command command) {
 		XBeeBindingConfig config = (XBeeBindingConfig) bindingConfigs.get(itemName);
-		return config != null && config.get(command) != null ? ((XBeeOutBindingConfigElement) config.get(command)).request
+		return config != null && config.get(command) != null ? ((XBeeOutBindingConfigElement) config.get(command)).requestType
+				: null;
+	}
+
+	@Override
+	public XBeeAddress getAddress(String itemName, Command command) {
+		XBeeBindingConfig config = (XBeeBindingConfig) bindingConfigs.get(itemName);
+		return config != null && config.get(command) != null ? ((XBeeOutBindingConfigElement) config.get(command)).address
+				: null;
+	}
+
+	@Override
+	public int[] getPayload(String itemName, Command command) {
+		XBeeBindingConfig config = (XBeeBindingConfig) bindingConfigs.get(itemName);
+		return config != null && config.get(command) != null ? ((XBeeOutBindingConfigElement) config.get(command)).payload
 				: null;
 	}
 
@@ -274,6 +325,15 @@ public class XBeeGenericBindingProvider extends AbstractGenericBindingProvider i
 
 	}
 
+	private int[] parsePayload(String data) {
+		int[] payload = new int[data.length()];
+		for (int i = 0; i < payload.length; i++) {
+			payload[i] = data.charAt(i);
+		}
+		//logger.debug("parsing payload [dataString={}, payload={}]", data, payload);
+		return payload;
+	}
+	
 	static class XBeeBindingConfig extends HashMap<Command, BindingConfig> implements BindingConfig {
 		/**
 		 * Generated serial version uid
@@ -306,6 +366,18 @@ public class XBeeGenericBindingProvider extends AbstractGenericBindingProvider i
 	}
 
 	static class XBeeOutBindingConfigElement implements BindingConfig {
-		XBeeRequest request;
+		Class<? extends XBeeRequest> requestType;
+		XBeeAddress address;
+		int[] payload;
+
+		@Override
+		public String toString() {
+			String repr = requestType.getName() + "(";
+			repr += address != null ? "address=" + address : "address=null";
+			repr += payload != null ? ", payload=" + payload : "payload=null";
+			repr += ")";
+			return repr;
+		}
 	}
+
 }

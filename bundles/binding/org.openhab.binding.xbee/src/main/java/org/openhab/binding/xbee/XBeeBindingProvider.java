@@ -138,8 +138,30 @@ public interface XBeeBindingProvider extends BindingProvider {
 	 *            the command for which to find the request
 	 * @return the matching request
 	 */
-	XBeeRequest getRequest(String itemName, Command command);
+	Class<? extends XBeeRequest> getRequestType(String itemName, Command command);
 
+	/**
+	 * Returns the address according to the <code>itemName</code>. Out-Binding
+	 * only.
+	 * 
+	 * @param itemName
+	 *            the item for which to find the address
+	 * @return the matching address
+	 */
+	XBeeAddress getAddress(String itemName, Command command);
+	
+	/**
+	 * Returns payload for Out-Binding according to the <code>itemName</code>
+	 * and <code>command</code>.
+	 * 
+	 * @param itemName
+	 * 			  the item for which to find the payload
+	 * @param command
+	 *            the command for which to find the request
+	 * @return the matching payload
+	 */
+	int[] getPayload(String itemName, Command command);
+	
 	/**
 	 * Returns all items which are mapped to a XBee In-Binding
 	 * 

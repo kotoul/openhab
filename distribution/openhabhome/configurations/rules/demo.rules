@@ -8,16 +8,42 @@ rule Startup
 when 
 	System started
 then
-	doZkouska("Welcome at openHab!")
+	if (!(Set.state instanceof DecimalType)) {
+		postUpdate(Set, 0)
+	}
 end
 
-rule Goodbye
-when 
-	System shuts down
+rule Temperature
+when
+	Item Set changed or 
+	Item Temperature changed
 then
-	doZkouska("Good bye!")
+	var Number temperature
+	
+	if (Temperature.state instanceof DecimalType) {
+		temperature = Temperature.state as DecimalType
+	} 
+	else {
+		temperature = 0
+	}
+	
+	var Number setpoint = Set.state as DecimalType
+	var Number set = 0
+	
+	if (setpoint - temperature > 1) {
+		set = 2
+	} else if (setpoint - temperature < -1) {
+		set = 0
+	} else {
+		set = 1
+	}
+	
+	if (Control.state != set) {
+		sendCommand(Control, set)
+	}
 end
 
+/*
 rule DowJones
 when
 	Item DowJones received update
@@ -27,7 +53,7 @@ then
 	sendCommand(Pom, valueIncreased)
 	sendCommand(DowJonesString, calcChange)
 end
-
+*/
 /* 
 rule "Crontest"
 when 

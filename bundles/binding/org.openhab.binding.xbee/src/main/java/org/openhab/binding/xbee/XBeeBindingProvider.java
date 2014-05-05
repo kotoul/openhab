@@ -97,6 +97,16 @@ public interface XBeeBindingProvider extends BindingProvider {
 	String getTransformation(String itemName);
 
 	/**
+	 * Returns the destination Item string of the data according to <code>itemName</code> .
+	 * In-Binding and RxResponse responses only.
+	 * 
+	 * @param itemName
+	 *            the item for which to find the destItem
+	 * @return
+	 */
+	String getDestItem(String itemName);
+	
+	/**
 	 * Returns the firstByte of the data according to <code>itemName</code> .
 	 * In-Binding and RxResponse responses only.
 	 * 

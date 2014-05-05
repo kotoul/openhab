@@ -59,7 +59,7 @@ public class XBeeGenericBindingProvider extends AbstractGenericBindingProvider i
 
 	/** {@link Pattern} which matches for an RxResponse In-Binding */
 	private static final Pattern RXRESPONSE_IN_PATTERN = Pattern
-			.compile("<\\[(?<responseType>\\w+)@(?<address>([0-9a-zA-Z])+)#(?<dataOffset>\\d+)(\\[(?<dataType>\\w+)\\])?(:(?<firstByte>\\d{1,3}))?\\]");
+			.compile("<\\[(?<responseType>\\w+)@(?<address>([0-9a-zA-Z])+)#(?<dataOffset>\\d+)(\\[(?<dataType>\\w+)\\])(?<destItem>\\w+)?(:(?<firstByte>\\d{1,3}))?\\]");
 
 	/** {@link Pattern} which matches an Out-Binding */
 	private static final Pattern OUT_PATTERN = Pattern
@@ -131,6 +131,7 @@ public class XBeeGenericBindingProvider extends AbstractGenericBindingProvider i
 				configElement.address = parseAddress(matcher.group("address"));
 				configElement.dataOffset = Integer.parseInt(matcher.group("dataOffset"));
 				configElement.dataType = parseDataType(matcher.group("dataType"));
+				configElement.destItem = matcher.group("destItem");
 				configElement.firstByte = matcher.group("firstByte") != null ? Byte.parseByte(matcher
 						.group("firstByte")) : null;
 
@@ -231,6 +232,13 @@ public class XBeeGenericBindingProvider extends AbstractGenericBindingProvider i
 	}
 
 	@Override
+	public String getDestItem(String itemName) {
+		XBeeBindingConfig config = (XBeeBindingConfig) bindingConfigs.get(itemName);
+		return config != null && config.get(IN_BINDING_KEY) != null ? ((XBeeInBindingConfigElement) config
+				.get(IN_BINDING_KEY)).destItem : null;
+	}
+
+	@Override
 	public Byte getFirstByte(String itemName) {
 		XBeeBindingConfig config = (XBeeBindingConfig) bindingConfigs.get(itemName);
 		return config != null && config.get(IN_BINDING_KEY) != null ? ((XBeeInBindingConfigElement) config
@@ -310,10 +318,11 @@ public class XBeeGenericBindingProvider extends AbstractGenericBindingProvider i
 		for (int i = 0; i < payload.length; i++) {
 			payload[i] = data.charAt(i);
 		}
-		//logger.debug("parsing payload [dataString={}, payload={}]", data, payload);
+		// logger.debug("parsing payload [dataString={}, payload={}]", data,
+		// payload);
 		return payload;
 	}
-	
+
 	static class XBeeBindingConfig extends HashMap<Command, BindingConfig> implements BindingConfig {
 		/**
 		 * Generated serial version uid
@@ -329,6 +338,7 @@ public class XBeeGenericBindingProvider extends AbstractGenericBindingProvider i
 		Class<? extends Number> dataType;
 		XBeePin pin;
 		String transformation;
+		String destItem;
 		Byte firstByte;
 
 		@Override
@@ -339,6 +349,7 @@ public class XBeeGenericBindingProvider extends AbstractGenericBindingProvider i
 			repr += dataType != null ? ", dataType=" + dataType : "";
 			repr += pin != null ? ", pin=" + pin : "";
 			repr += transformation != null ? ", transformation=" + transformation : "";
+			repr += destItem != null ? ", destItem=" + destItem : "";
 			repr += firstByte != null ? ", firstByte=" + firstByte : "";
 			repr += ")";
 			return repr;

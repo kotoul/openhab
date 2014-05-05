@@ -148,15 +148,15 @@ public class XBeeBinding extends AbstractBinding<XBeeBindingProvider> implements
 		Class<? extends XBeeRequest> requestType = provider.getRequestType(itemName, command);
 		XBeeAddress address = provider.getAddress(itemName, command);
 		int[] payload = provider.getPayload(itemName, command);
-		
-		//logger.debug("internalReceivedCommad [reqType={}]", requestType);
+
+		// logger.debug("internalReceivedCommad [reqType={}]", requestType);
 		if (requestType == TxRequest16.class) {
 			if (!(address instanceof XBeeAddress16)) {
 				logger.trace("wrong type of address [address={}]", address);
 				return;
 			}
 			TxRequest16 request = new TxRequest16((XBeeAddress16) address, payload);
-			//logger.debug("sending [request={}]", request);
+			// logger.debug("sending [request={}]", request);
 			try {
 				xbee.sendAsynchronous(request);
 			} catch (XBeeException e) {
@@ -329,16 +329,26 @@ public class XBeeBinding extends AbstractBinding<XBeeBindingProvider> implements
 						continue;
 					}
 
+					// Get message
 					char[] word = new char[response16.getData().length];
 					for (int i = 0; i < response16.getData().length; i++) {
 						word[i] = (char) response16.getData()[i];
 					}
 
+					// Check destination item
+					String msg = new String(word);
+					if (provider.getDestItem(itemName) != null) {
+						String[] msgParts = msg.split("_");
+						if (!msgParts[0].equals(provider.getDestItem(itemName))) {
+							continue;
+						}
+						msg = msgParts[1];
+					}
+
 					// Cast according to the itemType
-					// TODO: Support more
 					if (provider.getItemType(itemName).isAssignableFrom(NumberItem.class)) {
 						if (provider.getDataType(itemName) == int.class) {
-							newState = new DecimalType(new String(word));
+							newState = new DecimalType(msg);
 						}
 					} else {
 						logger.debug("Cannot create state of type {} for value {}", provider.getItemType(itemName),

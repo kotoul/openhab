@@ -1,0 +1,26 @@
+sitemap default label="Main Menu"
+{
+	Frame label="Main" {
+		Group item=all label="Vse" icon="fire-on"
+		
+		Text item=RMVP_teplota
+		Setpoint item=RMVP_objem minValue=0 maxValue=2 step=1
+	}
+}
+/*
+sitemap demo label="Main Menu"
+{
+	Frame label="Test Temperature" {
+		//Text item=DowJones
+		//Text item=DowJonesString valuecolor=[Pom==-1="red",Pom==1="green"]
+		Setpoint item=Set step=5 minValue=0 maxValue=120
+		Text item=Temperature
+	}
+	Frame label="0-STOP, 1-KEEP, 2-ON" {
+		Text item=Control valuecolor=[Control==0="red",Control==1="blue",Control==2="green"]
+	}
+	Frame label="Date" {
+		Text item=Date icon="calendar"
+	}
+}
+*/

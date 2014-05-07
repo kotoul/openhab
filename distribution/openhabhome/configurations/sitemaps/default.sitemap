@@ -1,10 +1,40 @@
 sitemap default label="Main Menu"
 {
-	Frame label="Main" {
-		Group item=all label="Vse" icon="fire-on"
-		
-		Text item=RMVP_teplota
-		Setpoint item=RMVP_objem minValue=0 maxValue=2 step=1
+	Frame label="Konfigurace" {
+		Text label="Vystírání" icon="icon16x16" {
+			Frame {
+				Setpoint item=vys_slad minValue=1 maxValue=50 step=1
+				Setpoint item=vys_voda minValue=1 maxValue=50 step=1
+				Setpoint item=vys_teplota_1 minValue=30 maxValue=40 step=1
+				Setpoint item=vys_cas_1 minValue=5 maxValue=10 step=1
+				Setpoint item=vys_teplota_2 minValue=50 maxValue=60 step=1
+				Setpoint item=vys_cas_2 minValue=20 maxValue=25 step=1
+			}
+			Frame {
+				Switch item=vys_on visibility=[ vys_on=="Uninitialized", rmu_on==OFF ]
+			}
+		}
+		Text label="Rmutování" icon="icon16x16" {
+			Frame {
+				Setpoint item=rmu_teplota_1 minValue=55 maxValue=65 step=1
+				Setpoint item=rmu_cas_11 minValue=15 maxValue=25 step=1
+				Setpoint item=rmu_teplota_2 minValue=65 maxValue=75 step=1
+				Setpoint item=rmu_cas_12 minValue=15 maxValue=25 step=1
+				Setpoint item=rmu_cas_21 minValue=25 maxValue=30 step=1
+				Setpoint item=rmu_teplota_3 minValue=70 maxValue=80 step=1
+				Setpoint item=rmu_cas_22 minValue=25 maxValue=35 step=1
+				Setpoint item=rmu_var minValue=90 maxValue=100 step=1
+				Setpoint item=rmu_cas_var minValue=10 maxValue=15 step=1
+			}
+			Frame {
+				Switch item=rmu_on visibility=[ rmu_on=="Uninitialized", vys_on==OFF ]
+			}
+		}
+	}	
+	Frame label="Monitoring" {
+		Group item=all label="Vše" icon="fire-on"
+		Group item=varna label="Varna" icon="heating"
+		Group item=zrani label="Zrání" icon="firstfloor"
 	}
 }
 /*

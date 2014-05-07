@@ -2,16 +2,120 @@ import org.openhab.core.library.types.*
 import org.openhab.core.persistence.*
 import org.openhab.model.script.actions.*
 
-//var Number counter = 1
+var Timer vysFazeT
 
-rule Startup
-when 
+rule Start
+when
 	System started
+then	
+	callScript("vystirani_default_conf")
+	
+end
+
+rule Vystirani
+when
+	Item vys_on changed from OFF to ON or
+	Item vysFaze changed
 then
-	if (!(RMVP_objem.state instanceof DecimalType)) {
-		postUpdate(RMVP_objem, 1)
+	if (vysFaze.state == 0) {      // 0. napustit vodu
+		sendCommand(Ventil_voda_RMVP, ON)
+	}
+	else if (vysFaze.state == 1) { // 1. ohrat vodu na prvni teplotu
+		sendCommand(RMVP_ohrev, ON)
+	}
+	else if (vysFaze.state == 2) { // 2. nasypat do ohrate vody slad
+		sendCommand(RMVP_slad, ON)
+		sendCommand(RMVP_michani, ON)
+	}
+	else if (vysFaze.state == 3) { // 3. michani sladu s vodou a ohrev cas1 minut
+		vysFazeT = createTimer(now.plusMinutes((vys_cas_1.state as DecimalType).intValue)) [|
+			sendCommand(vysFaze, 4)
+		]
+	}
+	else if (vysFaze.state == 4) { // 4. ohrev na druhou teplotu bez michani
+		sendCommand(RMVP_michani, OFF)
+		sendCommand(RMVP_ohrev, ON)
+	}
+	else if (vysFaze.state == 5) { // 5. ohrivat na druhou teplotu cas2 minut
+		vysFazeT = createTimer(now.plusMinutes((vys_cas_2.state as DecimalType).intValue)) [|
+			sendCommand(vys_on, OFF)
+			sendCommand(vysFaze, 0) 
+			sendCommand(rmu_on, ON)//hotovo
+		]
 	}
 end
+
+rule Rmutovani
+when
+	Item rmu_on changed from OFF to ON or
+	Item rmuFaze changed
+then
+	if (rmuFaze.state == 0) {
+		
+	}
+end
+
+
+rule RMVP_objem
+when
+	Item RMVP_objem changed
+then
+	// Vystirani
+	if (vys_on.state == ON) {
+		if (vysFaze.state == 0) {
+			if (RMVP_objem.state >= vys_voda.state as DecimalType) { 
+				sendCommand(Ventil_voda_RMVP, OFF)
+				sendCommand(vysFaze, 1)
+			} 
+		}
+		else if (vysFaze.state == 2) { 
+			if (RMVP_objem.state >= vys_voda.state as DecimalType + vys_slad.state as DecimalType) {
+				sendCommand(RMVP_slad, OFF)
+				sendCommand(vysFaze, 3)
+			}
+		}
+	}
+end
+
+rule RMVP_teplota
+when
+	Item RMVP_teplota changed
+then
+	// Vystirani
+	if (vys_on.state == ON) {
+		if (vysFaze.state == 1) { 
+			if (RMVP_teplota.state >= vys_teplota_1.state as DecimalType) {
+				sendCommand(RMVP_ohrev, OFF)
+				sendCommand(vysFaze, 2)
+			}
+		}
+		else if (vysFaze.state == 2 || vysFaze.state == 3) { 
+			if (RMVP_teplota.state >= vys_teplota_1.state as DecimalType) {
+				sendCommand(RMVP_ohrev, OFF)
+			}
+			else if (RMVP_ohrev.state == OFF) {
+				sendCommand(RMVP_ohrev, ON)
+			}
+		}
+		else if (vysFaze.state == 4) {
+			if (RMVP_teplota.state >= vys_teplota_2.state as DecimalType) {
+				sendCommand(RMVP_ohrev, OFF)
+				sendCommand(vysFaze, 5)
+			}
+		}
+		else if (vysFaze.state == 5) {	
+			if (RMVP_teplota.state >= vys_teplota_2.state as DecimalType) {
+				sendCommand(RMVP_ohrev, OFF)
+			}
+			else if (RMVP_ohrev.state == OFF) {
+				sendCommand(RMVP_ohrev, ON)
+			}
+		}
+	}
+end
+
+
+
 /*
 rule Temperature
 when

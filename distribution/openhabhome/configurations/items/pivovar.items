@@ -7,34 +7,67 @@ Group teploty
 Group ventily
 Group cerpadla
 
-Number RMVP_teplota "Teplota RMVP [%d °C]" <temperature> (all, varna, teploty) 	{ xbee="<[rxresponse16@0002#0[int]rmt]" }
-Number RMVP_objem "Objem RMVP [%d l]" <cistern> (all, varna) 					{ xbee="<[rxresponse16@0002#0[int]rmo]" }
-Switch RMVP_ohrev "RMVP Ohřev [%s]" <switch> (all, varna) 						{ xbee=">[ON:txrequest16@0002#roa] >[OFF:txrequest16@0002#roz]" }
-Switch RMVP_michani "RMVP Míchání [%s]" <switch> (all, varna)					{ xbee=">[ON:txrequest16@0002#rma] >[OFF:txrequest16@0002#rmz]" }
-Switch RMVP_poklice "RMVP Poklice [%s]" <switch> (all, varna)					{ xbee=">[ON:txrequest16@0002#rpa] >[OFF:txrequest16@0002#rpz]" }
-Switch RMVP_slad "RMVP Nasypat slad [%s]" <switch> (all, varna)					{ xbee=">[ON:txrequest16@0002#rna] >[OFF:txrequest16@0002#rnz]" }
+Number RMVP_teplota "Teplota RMVP [%d °C]" <temperature> (all, varna, teploty) 			{ xbee="<[rxresponse16@0002#0[int]rmt]" }
+Number RMVP_objem "Objem RMVP [%d l]" <cistern> (all, varna) 							{ xbee="<[rxresponse16@0002#0[int]rmo]" }
+Switch RMVP_ohrev "RMVP Ohřev [%s]" <switch> (all, varna) 								{ xbee=">[ON:txrequest16@0002#roa] >[OFF:txrequest16@0002#roz]" }
+Switch RMVP_michani "RMVP Míchání [%s]" <switch> (all, varna)							{ xbee=">[ON:txrequest16@0002#rma] >[OFF:txrequest16@0002#rmz]" }
+Switch RMVP_poklice "RMVP Poklice otevřena [%s]" <switch> (all, varna)					{ xbee=">[ON:txrequest16@0002#rpa] >[OFF:txrequest16@0002#rpz]" }
+Switch RMVP_slad "RMVP Nasypat slad [%s]" <switch> (all, varna)							{ xbee=">[ON:txrequest16@0002#rna] >[OFF:txrequest16@0002#rnz]" }
 
-Number SK_teplota "Teplota SK [%d °C]" <temperature> (all, varna, teploty)		{ xbee="<[rxresponse16@0002#0[int]skt]" }
-Number SK_objem "Objem SK [%d l]" <cistern> (all, varna) 						{ xbee="<[rxresponse16@0002#0[int]sko]" }
+Number SK_teplota "Teplota SK [%d °C]" <temperature> (all, varna, teploty)				{ xbee="<[rxresponse16@0002#0[int]skt]" }
+Number SK_objem "Objem SK [%d l]" <cistern> (all, varna) 								{ xbee="<[rxresponse16@0002#0[int]sko]" }
 
-Number Chladic_teplota "Chladič [%d °C]" <temperature> (all, zrani, teploty) 	{ xbee="<[rxresponse16@0002#0[int]cht]" }
+Number Chladic_teplota "Chladič Teplota [%d °C]" <temperature> (all, zrani, teploty) 	{ xbee="<[rxresponse16@0002#0[int]cht]" }
+Switch Chladic_zapnuto "Chladič [%s]" <temperature> (all, zrani)			 			{ xbee=">[ON:txrequest16@0002#cca] >[OFF:txrequest16@0002#ccz]" }
 
-Number Spilka_teplota "Spilka [%d °C]" <temperature> (all, zrani, teploty) 		{ xbee="<[rxresponse16@0002#0[int]spt]" }
-Number Spilka_sachmetr "Spilka Sacharometr [%d %%]" <chart> (all, zrani) 		{ xbee="<[rxresponse16@0002#0[int]sps]" }
+Number Spilka_teplota "Spilka Teplota [%d °C]" <temperature> (all, zrani, teploty) 		{ xbee="<[rxresponse16@0002#0[int]spt]" }
+Number Spilka_objem "Spilka Objem [%d l]" <cistern> (all, zrani) 						{ xbee="<[rxresponse16@0002#0[int]spo]" }
+Number Spilka_sachmetr "Spilka Sacharometr [%d %%]" <chart> (all, zrani) 				{ xbee="<[rxresponse16@0002#0[int]sps]" }
+Switch Spilka_klima "Spilka Klima [%s]" <switch> (all, zrani)		 					{ xbee=">[ON:txrequest16@0002#sca] >[OFF:txrequest16@0002#scz]" }
 
-Number Sklep_teplota "Sklep [%d °C]" <temperature> (all, zrani, teploty) 		{ xbee="<[rxresponse16@0002#0[int]slt]" }
+Number Sklep_teplota "Sklep Teplota [%d °C]" <temperature> (all, zrani, teploty)		{ xbee="<[rxresponse16@0002#0[int]slt]" }
+Number Sklep_objem "Sklep Objem [%d l]" <cistern> (all, zrani)	 						{ xbee="<[rxresponse16@0002#0[int]slo]" }
+Switch Sklep_klima "Sklep Klima [%s]" <switch> (all, zrani)			 					{ xbee=">[ON:txrequest16@0002#sla] >[OFF:txrequest16@0002#slz]" }
 
-Switch Cerpadlo_varna "Čerpadlo Varna [%s]" <switch> (all, cerpadla, varna) 	{ xbee=">[ON:txrequest16@0002#cva] >[OFF:txrequest16@0002#cvz]" }
-Switch Cerpadlo_spilka "Čerpadlo Spilka [%s]" <switch> (all, cerpadla, zrani) 	{ xbee=">[ON:txrequest16@0002#csa] >[OFF:txrequest16@0002#csz]" }
+Switch Cerpadlo_varna "Čerpadlo Varna [%s]" <switch> (all, cerpadla, varna) 			{ xbee=">[ON:txrequest16@0002#cva] >[OFF:txrequest16@0002#cvz]" }
+Switch Cerpadlo_spilka "Čerpadlo Spilka [%s]" <switch> (all, cerpadla, zrani) 			{ xbee=">[ON:txrequest16@0002#csa] >[OFF:txrequest16@0002#csz]" }
 
-Switch Ventil_voda_SK "Ventil Voda SK [%s]" <switch> (all, ventily)				{ xbee=">[ON:txrequest16@0002#vsa] >[OFF:txrequest16@0002#vsz]" }
-Switch Ventil_voda_RMVP "Ventil Voda RMVP [%s]" <switch> (all, ventily)			{ xbee=">[ON:txrequest16@0002#vra] >[OFF:txrequest16@0002#vrz]" }
-Switch Ventil_SKi "Ventil SKi [%s]" <switch> (all, ventily)						{ xbee=">[ON:txrequest16@0002#sia] >[OFF:txrequest16@0002#siz]" }
-Switch Ventil_RMVPi "Ventil RMVPi [%s]" <switch> (all, ventily)					{ xbee=">[ON:txrequest16@0002#ria] >[OFF:txrequest16@0002#riz]" }
-Switch Ventil_SKo "Ventil SKo [%s]" <switch> (all, ventily)						{ xbee=">[ON:txrequest16@0002#soa] >[OFF:txrequest16@0002#soz]" }
-Switch Ventil_RMVPo "Ventil RMVPo [%s]" <switch> (all, ventily)					{ xbee=">[ON:txrequest16@0002#rva] >[OFF:txrequest16@0002#rvz]" }
-Switch Ventil_SKo_s "Ventil SKo spodni [%s]" <switch> (all, ventily)			{ xbee=">[ON:txrequest16@0002#ssa] >[OFF:txrequest16@0002#ssz]" }
-Switch Ventil_RMVP_h "Ventil RMVPo horni [%s]" <switch> (all, ventily)			{ xbee=">[ON:txrequest16@0002#rha] >[OFF:txrequest16@0002#rhz]" }
-Switch Ventil_mladina "Ventil Mladina [%s]" <switch> (all, ventily)				{ xbee=">[ON:txrequest16@0002#mla] >[OFF:txrequest16@0002#mlz]" }
-Switch Ventil_kvasnice "Ventil Kvasnice [%s]" <switch> (all, ventily)			{ xbee=">[ON:txrequest16@0002#kva] >[OFF:txrequest16@0002#kvz]" }
-Switch Ventil_spilka "Ventil Spilka [%s]" <switch> (all, ventily)				{ xbee=">[ON:txrequest16@0002#spa] >[OFF:txrequest16@0002#spz]" }
+Switch Ventil_voda_SK "Ventil Voda SK [%s]" <switch> (all, ventily, varna)				{ xbee=">[ON:txrequest16@0002#vsa] >[OFF:txrequest16@0002#vsz]" }
+Switch Ventil_voda_RMVP "Ventil Voda RMVP [%s]" <switch> (all, ventily, varna)			{ xbee=">[ON:txrequest16@0002#vra] >[OFF:txrequest16@0002#vrz]" }
+Switch Ventil_SKi "Ventil SKi [%s]" <switch> (all, ventily, varna)						{ xbee=">[ON:txrequest16@0002#sia] >[OFF:txrequest16@0002#siz]" }
+Switch Ventil_RMVPi "Ventil RMVPi [%s]" <switch> (all, ventily, varna)					{ xbee=">[ON:txrequest16@0002#ria] >[OFF:txrequest16@0002#riz]" }
+Switch Ventil_SKo "Ventil SKo [%s]" <switch> (all, ventily, varna)						{ xbee=">[ON:txrequest16@0002#soa] >[OFF:txrequest16@0002#soz]" }
+Switch Ventil_RMVPo "Ventil RMVPo [%s]" <switch> (all, ventily, varna)					{ xbee=">[ON:txrequest16@0002#rva] >[OFF:txrequest16@0002#rvz]" }
+Switch Ventil_SKo_s "Ventil SKo spodni [%s]" <switch> (all, ventily, varna)				{ xbee=">[ON:txrequest16@0002#ssa] >[OFF:txrequest16@0002#ssz]" }
+Switch Ventil_RMVP_h "Ventil RMVPo horni [%s]" <switch> (all, ventily, varna)			{ xbee=">[ON:txrequest16@0002#rha] >[OFF:txrequest16@0002#rhz]" }
+Switch Ventil_mladina "Ventil Mladina [%s]" <switch> (all, ventily, varna)				{ xbee=">[ON:txrequest16@0002#mla] >[OFF:txrequest16@0002#mlz]" }
+Switch Ventil_kvasnice "Ventil Kvasnice [%s]" <switch> (all, ventily, zrani)			{ xbee=">[ON:txrequest16@0002#kva] >[OFF:txrequest16@0002#kvz]" }
+Switch Ventil_spilka "Ventil Spilka [%s]" <switch> (all, ventily, zrani)				{ xbee=">[ON:txrequest16@0002#spa] >[OFF:txrequest16@0002#spz]" }
+
+Group vystirani
+
+Number vys_slad "Množství sladu [%d l]" <cistern> (vystirani)
+Number vys_voda "Množství vody [%d l]" <cistern> (vystirani)
+Number vys_teplota_1 "Vystírací teplota [%d °C]" <temperature> (vystirani)
+Number vys_cas_1 "Čas vystírání [%d minut]" <"clock-on"> (vystirani)
+Number vys_teplota_2 "Zapařovací teplota [%d °C]" <temperature> (vystirani)
+Number vys_cas_2 "Čas zapařování [%d minut]" <"clock-on"> (vystirani)
+Switch vys_on "Fáze vystírání" <switch> (vystirani)
+Number vysFaze
+
+Group rmutovani
+
+Number rmu_teplota_1 "Rmutovací teplota 1 [%d °C]" <temperature> (rmutovani)
+Number rmu_cas_11 "Čas rmutování - první rmut 1 [%d minut]" <"clock-on"> (rmutovani)
+Number rmu_teplota_2 "Rmutovací teplota 2 [%d °C]" <temperature> (rmutovani)
+Number rmu_cas_12 "Čas rmutování - první rmut 2 [%d minut]" <"clock-on"> (rmutovani)
+Number rmu_cas_21 "Čas rmutování - drhý rmut 1 [%d minut]" <"clock-on"> (rmutovani)
+Number rmu_teplota_3 "Rmutovací teplota 3 [%d °C]" <temperature> (rmutovani)
+Number rmu_cas_22 "Čas rmutování - druhý rmut 2[%d minut]" <"clock-on"> (rmutovani)
+Number rmu_var "Rmutovací teplota var [%d °C]" <temperature> (rmutovani)
+Number rmu_cas_var "Čas rmutování - var [%d minut]" <"clock-on"> (rmutovani)
+Switch rmu_on "Fáze rmutování" <switch> (rmutovani)
+Number rmuFaze
+
+
+

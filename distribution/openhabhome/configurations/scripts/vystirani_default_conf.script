@@ -1,0 +1,7 @@
+postUpdate(vysFaze, 0)
+postUpdate(vys_slad, 10)
+postUpdate(vys_voda, 10)
+postUpdate(vys_teplota_1, 16)
+postUpdate(vys_cas_1, 1)
+postUpdate(vys_teplota_2, 20)
+postUpdate(vys_cas_2, 1)

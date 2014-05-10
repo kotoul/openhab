@@ -1,0 +1,60 @@
+Group zrani
+
+Number Spilka_teplota "Spilka Teplota [%d °C]" <temperature> (zrani, teploty) 		{ xbee="<[rxresponse16@0002#0[int]spt]" }
+Number Spilka_n1_objem "Spilka Nádrž 1 [%d l]" <cistern> (zrani) 					{ xbee="<[rxresponse16@0002#0[int]sp1]" }
+Number Spilka_n2_objem "Spilka Nádrž 2 [%d l]" <cistern> (zrani) 					{ xbee="<[rxresponse16@0002#0[int]sp2]" }
+Number Spilka_sachmetr1 "Spilka Sacharometr 1 [%d %%]" <chart> (zrani) 				{ xbee="<[rxresponse16@0002#0[int]sc1]" }
+Number Spilka_sachmetr2 "Spilka Sacharometr 2 [%d %%]" <chart> (zrani) 				{ xbee="<[rxresponse16@0002#0[int]sc2]" }
+Switch Spilka_klima "Spilka Klima [%s]" <switch> (zrani)		 					{ xbee=">[ON:txrequest16@0002#sca] >[OFF:txrequest16@0002#scz]" }
+
+Number Sklep_teplota "Sklep Teplota [%d °C]" <temperature> (zrani, teploty)			{ xbee="<[rxresponse16@0002#0[int]slt]" }
+Number Sklep_n1_objem "Sklep Nádrž 1 [%d l]" <cistern> (zrani)	 					{ xbee="<[rxresponse16@0002#0[int]sl1]" }
+Number Sklep_n2_objem "Sklep Nádrž 2 [%d l]" <cistern> (zrani)	 					{ xbee="<[rxresponse16@0002#0[int]sl2]" }
+Number Sklep_n3_objem "Sklep Nádrž 3 [%d l]" <cistern> (zrani)	 					{ xbee="<[rxresponse16@0002#0[int]sl3]" }
+Number Sklep_n4_objem "Sklep Nádrž 4 [%d l]" <cistern> (zrani)	 					{ xbee="<[rxresponse16@0002#0[int]sl4]" }
+Switch Sklep_klima "Sklep Klima [%s]" <switch> (zrani)			 					{ xbee=">[ON:txrequest16@0002#sla] >[OFF:txrequest16@0002#slz]" }
+
+Switch Cerpadlo_spilka "Čerpadlo Spilka [%s]" <switch> (cerpadla, zrani) 			{ xbee=">[ON:txrequest16@0002#csa] >[OFF:txrequest16@0002#csz]" }
+
+Switch Ventil_SPi_1 "Ventil Spilka In 1 [%s]" <switch> (ventily, zrani)				{ xbee=">[ON:txrequest16@0002#a1a] >[OFF:txrequest16@0002#a1z]" }
+Switch Ventil_SPi_2 "Ventil Spilka In 2 [%s]" <switch> (ventily, zrani)				{ xbee=">[ON:txrequest16@0002#a2a] >[OFF:txrequest16@0002#a2z]" }
+Switch Ventil_kvasnice1 "Ventil Kvasnice 1 [%s]" <switch> (ventily, zrani)			{ xbee=">[ON:txrequest16@0002#k1a] >[OFF:txrequest16@0002#k1z]" }
+Switch Ventil_kvasnice2 "Ventil Kvasnice 2 [%s]" <switch> (ventily, zrani)			{ xbee=">[ON:txrequest16@0002#k2a] >[OFF:txrequest16@0002#k2z]" }
+Switch Ventil_SPo_1 "Ventil Spilka Out 1 [%s]" <switch> (ventily, zrani)			{ xbee=">[ON:txrequest16@0002#b1a] >[OFF:txrequest16@0002#b1z]" }
+Switch Ventil_SPo_2 "Ventil Spilka Out 2 [%s]" <switch> (ventily, zrani)			{ xbee=">[ON:txrequest16@0002#b2a] >[OFF:txrequest16@0002#b2z]" }
+Switch Ventil_SKLEPi_1 "Ventil Sklep In 1 [%s]" <switch> (ventily, zrani)			{ xbee=">[ON:txrequest16@0002#c1a] >[OFF:txrequest16@0002#c1z]" }
+Switch Ventil_SKLEPi_2 "Ventil Sklep In 2 [%s]" <switch> (ventily, zrani)			{ xbee=">[ON:txrequest16@0002#c2a] >[OFF:txrequest16@0002#c2z]" }
+Switch Ventil_SKLEPi_3 "Ventil Sklep In 3 [%s]" <switch> (ventily, zrani)			{ xbee=">[ON:txrequest16@0002#c3a] >[OFF:txrequest16@0002#c3z]" }
+Switch Ventil_SKLEPi_4 "Ventil Sklep In 4 [%s]" <switch> (ventily, zrani)			{ xbee=">[ON:txrequest16@0002#c4a] >[OFF:txrequest16@0002#c4z]" }
+Switch Ventil_SKLEPo_1 "Ventil Sklep Out 1 [%s]" <switch> (ventily, zrani)			{ xbee=">[ON:txrequest16@0002#d1a] >[OFF:txrequest16@0002#d1z]" }
+Switch Ventil_SKLEPo_2 "Ventil Sklep Out 2 [%s]" <switch> (ventily, zrani)			{ xbee=">[ON:txrequest16@0002#d2a] >[OFF:txrequest16@0002#d2z]" }
+Switch Ventil_SKLEPo_3 "Ventil Sklep Out 3 [%s]" <switch> (ventily, zrani)			{ xbee=">[ON:txrequest16@0002#d3a] >[OFF:txrequest16@0002#d3z]" }
+Switch Ventil_SKLEPo_4 "Ventil Sklep Out 4 [%s]" <switch> (ventily, zrani)			{ xbee=">[ON:txrequest16@0002#d4a] >[OFF:txrequest16@0002#d4z]" }
+
+Group chlazeni
+
+Number chl_teplota "Teplota chlazení [%d °C]" <temperature> (chlazeni)
+Switch chl_on "Chlazení" <switch> (chlazeni)
+Number chlFaze "Číslo procesu [%d]"
+
+Group kvaseni
+
+Switch kva_on "Kvašení" <switch> (kvaseni)
+Number kva_spilka_vyber "Výber nádrže - Spilka [%d]" <office> (kvaseni)
+Number kva_sklep_vyber1 "Výběr nádrže - Sklep (ze spilky 1) [%d]" <office> (kvaseni)
+Number kva_sklep_vyber2 "Výběr nádrže - Sklep (ze spilky 2) [%d]" <office> (kvaseni)
+Number kva_spilka_teplota "Teplota spilky [%d °C]" <temperature> (kvaseni)
+Number kva_sklep_teplota "Teplota sklepa [%d °C]" <temperature> (kvaseni)
+Number kva_sklep_cas "Čas ležení [%d dnů]" <temperature> (kvaseni)
+Number kva_sachmetr1 "Cílový zbytkový cukr Spilka 1 [%d %%]" <chart> (kvaseni)
+Number kva_sachmetr2 "Cílový zbytkový cukr Spilka 2 [%d %%]" <chart> (kvaseni)
+Switch dokvaseni
+
+String kva_sklep_n1_start "Datum začátku dokvašování n1 [%s]" <calendar> (kvaseni)
+String kva_sklep_n2_start "Datum začátku dokvašování n2 [%s]" <calendar> (kvaseni)
+String kva_sklep_n3_start "Datum začátku dokvašování n3 [%s]" <calendar> (kvaseni)
+String kva_sklep_n4_start "Datum začátku dokvašování n4 [%s]" <calendar> (kvaseni)
+String kva_sklep_n1_cil "Datum konce dokvašování n1 [%s]" <calendar> (kvaseni)
+String kva_sklep_n2_cil "Datum konce dokvašování n2 [%s]" <calendar> (kvaseni)
+String kva_sklep_n3_cil "Datum konce dokvašování n3 [%s]" <calendar> (kvaseni)
+String kva_sklep_n4_cil "Datum konce dokvašování n4 [%s]" <calendar> (kvaseni)

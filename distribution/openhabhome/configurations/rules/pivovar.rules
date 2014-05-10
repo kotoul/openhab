@@ -2,57 +2,410 @@ import org.openhab.core.library.types.*
 import org.openhab.core.persistence.*
 import org.openhab.model.script.actions.*
 
-var Timer vysFazeT
+var Timer varnaTimer
+var Number dveTretiny // objem pro rmutovani
 
 rule Start
 when
-	System started
+	System started or
+	Item reInit changed to ON
 then	
-	callScript("vystirani_default_conf")
-	
+	dveTretiny = 0
+	postUpdate(reInit, OFF)
+	varnaTimer = createTimer(now.plusSeconds(1)) [|
+		callScript("default_conf")
+	]
 end
 
 rule Vystirani
 when
-	Item vys_on changed from OFF to ON or
+	Item vys_on changed or
 	Item vysFaze changed
 then
-	if (vysFaze.state == 0) {      // 0. napustit vodu
-		sendCommand(Ventil_voda_RMVP, ON)
+	if (   rmu_on.state == ON || rmuFaze.state > 0 || sce_on.state == ON || sceFaze.state > 0	 // kdyz bezi jina faze, nezapinat
+		|| chm_on.state == ON || chmFaze.state > 0 || chl_on.state == ON || chlFaze.state > 0
+		|| (kva_spilka_vyber.state == 0 || kva_spilka_vyber.state == 1 && kva_sklep_vyber1.state == 0 || kva_spilka_vyber.state == 2 && kva_sklep_vyber2.state == 0)) { 
+		sendCommand(vys_on, OFF)
 	}
-	else if (vysFaze.state == 1) { // 1. ohrat vodu na prvni teplotu
-		sendCommand(RMVP_ohrev, ON)
+	else if (vys_on.state == ON) {
+		if (vysFaze.state == 0) {      // 0. napustit vodu
+			sendCommand(Ventil_voda_RMVP, ON)
+		}
+		else if (vysFaze.state == 1) { // 1. ohrat vodu na prvni teplotu
+			sendCommand(RMVP_cilovaTeplota, vys_teplota_1.state as DecimalType)
+		}
+		else if (vysFaze.state == 2) { // 2. nasypat do ohrate vody slad
+			sendCommand(RMVP_cilovaTeplota, vys_teplota_1.state as DecimalType)
+			sendCommand(RMVP_slad, ON)
+			sendCommand(RMVP_michani, ON)
+		}
+		else if (vysFaze.state == 3) { // 3. michani sladu s vodou a teplota1 cas1 minut
+			sendCommand(RMVP_cilovaTeplota, vys_teplota_1.state as DecimalType)
+			varnaTimer = createTimer(now.plusSeconds((vys_cas_1.state as DecimalType).intValue)) [|
+				sendCommand(vysFaze, 4)
+			]
+		}
+		else if (vysFaze.state == 4) { // 4. ohrev na druhou teplotu bez michani
+			sendCommand(RMVP_michani, OFF)
+			sendCommand(RMVP_cilovaTeplota, vys_teplota_2.state as DecimalType)
+		}
+		else if (vysFaze.state == 5) { // 5. druha teplota cas2 minut
+			sendCommand(RMVP_cilovaTeplota, vys_teplota_2.state as DecimalType)
+			varnaTimer = createTimer(now.plusSeconds((vys_cas_2.state as DecimalType).intValue)) [|
+				sendCommand(RMVP_cilovaTeplota, 0)
+				
+				postUpdate(vys_on, OFF)
+				postUpdate(vysFaze, 0)  // hotovo
+				sendCommand(rmu_on, ON) // dalsi faze
+			]
+		}
 	}
-	else if (vysFaze.state == 2) { // 2. nasypat do ohrate vody slad
-		sendCommand(RMVP_slad, ON)
-		sendCommand(RMVP_michani, ON)
-	}
-	else if (vysFaze.state == 3) { // 3. michani sladu s vodou a ohrev cas1 minut
-		vysFazeT = createTimer(now.plusMinutes((vys_cas_1.state as DecimalType).intValue)) [|
-			sendCommand(vysFaze, 4)
-		]
-	}
-	else if (vysFaze.state == 4) { // 4. ohrev na druhou teplotu bez michani
+	else if (vys_on.state == OFF && rmu_on.state == OFF && sce_on.state == OFF && chm_on.state == OFF && chl_on.state == OFF) { //pauza
+		sendCommand(Ventil_voda_RMVP, OFF)
+		sendCommand(RMVP_cilovaTeplota, 0)
 		sendCommand(RMVP_michani, OFF)
-		sendCommand(RMVP_ohrev, ON)
-	}
-	else if (vysFaze.state == 5) { // 5. ohrivat na druhou teplotu cas2 minut
-		vysFazeT = createTimer(now.plusMinutes((vys_cas_2.state as DecimalType).intValue)) [|
-			sendCommand(vys_on, OFF)
-			sendCommand(vysFaze, 0) 
-			sendCommand(rmu_on, ON)//hotovo
-		]
+		sendCommand(RMVP_slad, OFF)
+		if (varnaTimer != null) varnaTimer.cancel
 	}
 end
 
 rule Rmutovani
 when
-	Item rmu_on changed from OFF to ON or
+	Item rmu_on changed or
 	Item rmuFaze changed
 then
-	if (rmuFaze.state == 0) {
-		
+	if ((!(RMVP_objem.state instanceof DecimalType && RMVP_objem.state > 2) && rmuFaze.state == 0) // kdyz je prazdna RMVP nebo bezi jina faze, nezapinat 
+		|| vys_on.state == ON || vysFaze.state > 0 || sce_on.state == ON || sceFaze.state > 0
+		|| chm_on.state == ON || chmFaze.state > 0 || chl_on.state == ON || chlFaze.state > 0
+		|| (kva_spilka_vyber.state == 0 || kva_spilka_vyber.state == 1 && kva_sklep_vyber1.state == 0 || kva_spilka_vyber.state == 2 && kva_sklep_vyber2.state == 0)) { 
+		sendCommand(rmu_on, OFF)
 	}
+	else if (rmu_on.state == ON) { 
+		if (rmuFaze.state == 0) {      // 0. presunout 2/3 objemu RMVP do SK
+			dveTretiny = if (dveTretiny == 0) (2 * RMVP_objem.state as DecimalType) / 3 else dveTretiny // kvuli pauze
+			sendCommand(Ventil_RMVPo, ON)
+			sendCommand(Ventil_SKi, ON)
+			sendCommand(Cerpadlo_varna, ON)
+		}
+		else if (rmuFaze.state == 1) { // 1. prvni rmut, zahrat na prvni teplotu
+			sendCommand(RMVP_cilovaTeplota, rmu_teplota_1.state as DecimalType)
+		}
+		else if (rmuFaze.state == 2) { // 2. prvni rmut, prvni teplota
+			sendCommand(RMVP_cilovaTeplota, rmu_teplota_1.state as DecimalType)
+			varnaTimer = createTimer(now.plusSeconds((rmu_cas_11.state as DecimalType).intValue)) [|
+				sendCommand(rmuFaze, 3)
+			]
+		}
+		else if (rmuFaze.state == 3) { // 3. prvni rmut, zahrat na druhou teplotu
+			sendCommand(RMVP_cilovaTeplota, rmu_teplota_2.state as DecimalType)
+		}
+		else if (rmuFaze.state == 4) { // 4. prvni rmut, druha teplota
+			sendCommand(RMVP_cilovaTeplota, rmu_teplota_2.state as DecimalType)
+			varnaTimer = createTimer(now.plusSeconds((rmu_cas_12.state as DecimalType).intValue)) [|
+				sendCommand(rmuFaze, 5)
+			]
+		}
+		else if (rmuFaze.state == 5) { // 5. privest k varu (prvni rmut)
+			sendCommand(RMVP_cilovaTeplota, rmu_var.state as DecimalType)
+		}
+		else if (rmuFaze.state == 6) { // 6. varit (prvni rmut)
+			sendCommand(RMVP_cilovaTeplota, rmu_var.state as DecimalType)
+			varnaTimer = createTimer(now.plusSeconds((rmu_cas_var.state as DecimalType).intValue)) [|
+				sendCommand(RMVP_cilovaTeplota, 0)
+				sendCommand(rmuFaze, 7)
+			]
+		}
+		else if (rmuFaze.state == 7) { // 7. slit dilo
+			sendCommand(Ventil_RMVPi, ON)
+			sendCommand(Ventil_SKo, ON)
+			sendCommand(Cerpadlo_varna, ON)
+			sendCommand(RMVP_michani, ON)
+		}
+		else if (rmuFaze.state == 8) { // 8. zkontrolovat teplotu prvniho rmutu
+			sendCommand(RMVP_michani, OFF)
+			sendCommand(RMVP_cilovaTeplota, rmu_teplota_r1.state as DecimalType)
+		}
+		else if (rmuFaze.state == 9) { // 9. presunout 2/3 objemu RMVP do SK
+			sendCommand(Ventil_RMVPo, ON)
+			sendCommand(Ventil_SKi, ON)
+			sendCommand(Cerpadlo_varna, ON)
+		}
+		else if (rmuFaze.state == 10) { // 10. druhy rmut, zahrat na druhou teplotu
+			sendCommand(RMVP_cilovaTeplota, rmu_teplota_2.state as DecimalType)
+		}
+		else if (rmuFaze.state == 11) { // 11. druhy rmut, druha teplota
+			sendCommand(RMVP_cilovaTeplota, rmu_teplota_2.state as DecimalType)
+			varnaTimer = createTimer(now.plusSeconds((rmu_cas_21.state as DecimalType).intValue)) [|
+				sendCommand(rmuFaze, 12)
+			]
+		}
+		else if (rmuFaze.state == 12) { // 12. privest k varu (druhy rmut)
+			sendCommand(RMVP_cilovaTeplota, rmu_var.state as DecimalType)
+		}
+		else if (rmuFaze.state == 13) { // 13. varit (druhy rmut)
+			sendCommand(RMVP_cilovaTeplota, rmu_var.state as DecimalType)
+			varnaTimer = createTimer(now.plusSeconds((rmu_cas_var.state as DecimalType).intValue)) [|
+				sendCommand(RMVP_cilovaTeplota, 0)
+				sendCommand(rmuFaze, 14)
+			]
+		}
+		else if (rmuFaze.state == 14) { // 14. slit dilo
+			sendCommand(Ventil_RMVPi, ON)
+			sendCommand(Ventil_SKo, ON)
+			sendCommand(Cerpadlo_varna, ON)
+			sendCommand(RMVP_michani, ON)
+		}
+		else if (rmuFaze.state == 15) { // 15. celek, zahrat na treti teplotu
+			sendCommand(RMVP_michani, OFF)
+			sendCommand(RMVP_cilovaTeplota, rmu_teplota_3.state as DecimalType)
+		}
+		else if (rmuFaze.state == 16) { // 16. celek, treti teplota
+			sendCommand(RMVP_cilovaTeplota, rmu_teplota_3.state as DecimalType)
+			varnaTimer = createTimer(now.plusSeconds((rmu_cas_22.state as DecimalType).intValue)) [|
+				dveTretiny = 0
+				sendCommand(RMVP_cilovaTeplota, 0)
+				
+				postUpdate(rmu_on, OFF)
+				postUpdate(rmuFaze, 0)    // hotovo
+				sendCommand(sce_on, ON)// dalsi faze
+			]
+		}
+	}
+	else if (vys_on.state == OFF && rmu_on.state == OFF && sce_on.state == OFF && chm_on.state == OFF && chl_on.state == OFF) { //pauza
+		sendCommand(RMVP_cilovaTeplota, 0)
+		sendCommand(Ventil_RMVPo, OFF)
+		sendCommand(Ventil_SKi, OFF)
+		sendCommand(Ventil_RMVPi, OFF)
+		sendCommand(Ventil_SKo, OFF)
+		sendCommand(Cerpadlo_varna, OFF)
+		if (varnaTimer != null) varnaTimer.cancel
+	}
+end
+
+rule Scezovani
+when
+	Item sce_on changed or
+	Item sceFaze changed
+then
+	if ((!(RMVP_objem.state instanceof DecimalType && RMVP_objem.state > 2) && sceFaze.state == 0) // kdyz je prazdna RMVP nebo bezi jina faze, nezapinat 
+		|| vys_on.state == ON || vysFaze.state > 0 || rmu_on.state == ON || rmuFaze.state > 0
+		|| chm_on.state == ON || chmFaze.state > 0 || chl_on.state == ON || chlFaze.state > 0
+		|| (kva_spilka_vyber.state == 0 || kva_spilka_vyber.state == 1 && kva_sklep_vyber1.state == 0 || kva_spilka_vyber.state == 2 && kva_sklep_vyber2.state == 0)) { 
+		sendCommand(sce_on, OFF)
+	}
+	else if (sce_on.state == ON) { 
+		if (sceFaze.state == 0) {      // 0. precerpat do SK
+			sendCommand(Ventil_RMVPo, ON)
+			sendCommand(Ventil_SKi, ON)
+			sendCommand(Cerpadlo_varna, ON)
+		}
+		else if (sceFaze.state == 1) { // 1. zapnout scezovani na urcity cas
+			sendCommand(Ventil_SKo_s, ON)
+			sendCommand(Ventil_SKi, ON)
+			sendCommand(Cerpadlo_varna, ON)
+			varnaTimer = createTimer(now.plusSeconds((sce_cas.state as DecimalType).intValue)) [|
+				sendCommand(Ventil_SKo_s, OFF)
+				sendCommand(Ventil_SKi, OFF)
+				sendCommand(Cerpadlo_varna, OFF)
+				sendCommand(sceFaze, 2)
+			]
+		}
+		else if (sceFaze.state == 2) { // 2. precerpat zpet do RMVP
+			sendCommand(Ventil_RMVPi, ON)
+			sendCommand(Ventil_SKo, ON)
+			sendCommand(Cerpadlo_varna, ON)
+		}
+		else if (sceFaze.state == 3) { // 3. scezovani dokonceno
+			postUpdate(sce_on, OFF)
+			postUpdate(sceFaze, 0)  // hotovo
+			sendCommand(chm_on, ON) // dalsi faze
+		}
+	}
+	else if (vys_on.state == OFF && rmu_on.state == OFF && sce_on.state == OFF && chm_on.state == OFF && chl_on.state == OFF) { //pauza
+		sendCommand(Ventil_RMVPo, OFF)
+		sendCommand(Ventil_SKo_s, OFF)
+		sendCommand(Ventil_SKi, OFF)
+		sendCommand(Ventil_RMVPi, OFF)
+		sendCommand(Ventil_SKo, OFF)
+		sendCommand(Cerpadlo_varna, OFF)
+		if (varnaTimer != null) varnaTimer.cancel
+	}
+end
+
+rule Chmelovar
+when
+	Item chm_on changed or
+	Item chmFaze changed
+then
+	if ((!(RMVP_objem.state instanceof DecimalType && RMVP_objem.state > 2) && chmFaze.state == 0) // kdyz je prazdna RMVP nebo bezi jina faze, nezapinat 
+		|| vys_on.state == ON || vysFaze.state > 0 || rmu_on.state == ON || rmuFaze.state > 0
+		|| sce_on.state == ON || sceFaze.state > 0 || chl_on.state == ON || chlFaze.state > 0
+		|| (kva_spilka_vyber.state == 0 || kva_spilka_vyber.state == 1 && kva_sklep_vyber1.state == 0 || kva_spilka_vyber.state == 2 && kva_sklep_vyber2.state == 0)) { 
+		sendCommand(chm_on, OFF)
+	}
+	else if (chm_on.state == ON) { 
+		if (chmFaze.state == 0) {	   // 0. zahrat na teplotu chmelovaru
+			sendCommand(RMVP_cilovaTeplota, chm_teplota.state as DecimalType)
+			sendCommand(RMVP_poklice, ON)
+		}
+		else if (chmFaze.state == 1) { // 1. varit 
+			sendCommand(RMVP_cilovaTeplota, chm_teplota.state as DecimalType)
+			sendCommand(RMVP_poklice, ON)
+			varnaTimer = createTimer(now.plusSeconds((chm_cas.state as DecimalType).intValue)) [|
+				sendCommand(RMVP_poklice, OFF)
+				sendCommand(RMVP_cilovaTeplota, 0)
+				sendCommand(chmFaze, 2)
+			]
+		}
+		else if (chmFaze.state == 2) { // 2. chmelovar hotov
+			postUpdate(chm_on, OFF)
+			postUpdate(chmFaze, 0)  // hotovo
+			sendCommand(chl_on, ON) // dalsi faze
+		}
+	}
+	else if (vys_on.state == OFF && rmu_on.state == OFF && sce_on.state == OFF && chm_on.state == OFF && chl_on.state == OFF) { //pauza
+		sendCommand(RMVP_cilovaTeplota, 0)
+		sendCommand(RMVP_poklice, OFF)
+		if (varnaTimer != null) varnaTimer.cancel
+	}
+end
+
+rule Chlazeni
+when
+	Item chl_on changed or
+	Item chlFaze changed
+then
+	if ((!(RMVP_objem.state instanceof DecimalType && RMVP_objem.state > 2) && chlFaze.state == 0) // kdyz je prazdna RMVP nebo bezi jina faze, nezapinat 
+		|| vys_on.state == ON || vysFaze.state > 0 || rmu_on.state == ON || rmuFaze.state > 0
+		|| sce_on.state == ON || sceFaze.state > 0 || chm_on.state == ON || chmFaze.state > 0
+		|| (kva_spilka_vyber.state == 0 || kva_spilka_vyber.state == 1 && kva_sklep_vyber1.state == 0 || kva_spilka_vyber.state == 2 && kva_sklep_vyber2.state == 0)) { 
+		sendCommand(chl_on, OFF)
+	}
+	else if (chl_on.state == ON) {
+		if (chlFaze.state == 0) {	   // 0. vyriva kad + zapnout chladic
+			sendCommand(RMVP_michani, ON)
+			sendCommand(Chladic_zapnuto, ON)
+		}
+		else if (chlFaze.state == 1) { // 1. cerpat do spilky
+			sendCommand(Chladic_zapnuto, ON)
+			switch(kva_spilka_vyber.state) {
+				case 1: sendCommand(Ventil_SPi_1, ON)
+				case 2:	sendCommand(Ventil_SPi_2, ON)
+			}
+			sendCommand(Ventil_RMVPo, ON)
+			sendCommand(Ventil_mladina, ON)
+			sendCommand(Cerpadlo_varna, ON)
+		}
+		else if (chlFaze.state == 2) { // 2. chlazeni a precerpani hotovo
+			sendCommand(Chladic_zapnuto, OFF)
+			sendCommand(RMVP_michani, OFF)
+			postUpdate(chl_on, OFF)
+			postUpdate(chlFaze, 0)  // hotovo
+			sendCommand(kva_on, ON) // dalsi faze
+		}
+	}
+	else if (vys_on.state == OFF && rmu_on.state == OFF && sce_on.state == OFF && chm_on.state == OFF && chl_on.state == OFF) { //pauza
+		sendCommand(Chladic_zapnuto, OFF)
+		sendCommand(RMVP_michani, OFF)
+		sendCommand(Ventil_RMVPo, OFF)
+		sendCommand(Ventil_mladina, OFF)
+		sendCommand(Cerpadlo_varna, OFF)
+	}
+end
+
+rule Kvaseni
+when
+	Item kva_on changed to ON or
+	Item Spilka_sachmetr1 changed or
+	Item Spilka_sachmetr2 changed
+then
+	if (kva_on.state == ON) { // studena mladina je ve spilce, pridame kvasnice a nechame kvasit
+		sendCommand(Spilka_klima, ON)
+		switch(kva_spilka_vyber.state) {
+			case 1: sendCommand(Ventil_kvasnice1, ON)
+			case 2:	sendCommand(Ventil_kvasnice2, ON)
+		}
+		postUpdate(kva_on, OFF)
+	}
+	if (Spilka_sachmetr1.state instanceof DecimalType && Spilka_sachmetr1.state <= kva_sachmetr1.state as DecimalType) {
+		sendCommand(Ventil_SPo_1, ON)
+		sendCommand(Ventil_kvasnice1, OFF)
+		sendCommand(dokvaseni, ON)
+	}
+	if (Spilka_sachmetr2.state instanceof DecimalType && Spilka_sachmetr2.state <= kva_sachmetr2.state as DecimalType) {
+		sendCommand(Ventil_SPo_2, ON)
+		sendCommand(Ventil_kvasnice2, OFF)
+		sendCommand(dokvaseni, ON) 
+	}
+end
+
+rule Dokvaseni
+when
+	Item dokvaseni changed to ON
+then
+	var Number pom
+	if (Ventil_SPo_1.state == ON) {
+		pom = kva_sklep_vyber1.state as DecimalType
+	}
+	else {
+		pom = kva_sklep_vyber2.state as DecimalType
+	}
+	switch(pom) {
+		case 1: {
+			if (Ventil_SKLEPo_1.state == ON) sendCommand(Ventil_SKLEPo_1, OFF)
+			sendCommand(Ventil_SKLEPi_1, ON) 
+			sendCommand(kva_sklep_n1_start, now.toString("dd.MM.yyyy"))
+			sendCommand(kva_sklep_n1_cil, now.plusDays((kva_sklep_cas.state as DecimalType).intValue).toString("dd.MM.yyyy"))
+			/*nadrz1 = createTimer(now.plusSeconds((kva_sklep_cas.state as DecimalType).intValue)) [|
+				sendCommand(Ventil_SKLEPo_1, ON)
+			]	*/
+		}
+		case 2: {
+			if (Ventil_SKLEPo_2.state == ON) sendCommand(Ventil_SKLEPo_2, OFF)
+			sendCommand(Ventil_SKLEPi_2, ON)
+			sendCommand(kva_sklep_n2_start, now.toString("dd.MM.yyyy"))
+			sendCommand(kva_sklep_n2_cil, now.plusDays((kva_sklep_cas.state as DecimalType).intValue).toString("dd.MM.yyyy"))
+			/*nadrz2 = createTimer(now.plusSeconds((kva_sklep_cas.state as DecimalType).intValue)) [|
+				sendCommand(Ventil_SKLEPo_2, ON)
+			]	*/
+		}
+		case 3:	{
+			if (Ventil_SKLEPo_3.state == ON) sendCommand(Ventil_SKLEPo_3, OFF)
+			sendCommand(Ventil_SKLEPi_3, ON)
+			sendCommand(kva_sklep_n3_start, now.toString("dd.MM.yyyy"))
+			sendCommand(kva_sklep_n3_cil, now.plusDays((kva_sklep_cas.state as DecimalType).intValue).toString("dd.MM.yyyy"))
+			/*nadrz3 = createTimer(now.plusSeconds((kva_sklep_cas.state as DecimalType).intValue)) [|
+				sendCommand(Ventil_SKLEPo_3, ON)
+			]*/
+		}
+		case 4:	{
+			if (Ventil_SKLEPo_4.state == ON) sendCommand(Ventil_SKLEPo_4, OFF)
+			sendCommand(Ventil_SKLEPi_4, ON)
+			sendCommand(kva_sklep_n4_start, now.toString("dd.MM.yyyy"))
+			sendCommand(kva_sklep_n4_cil, now.plusDays((kva_sklep_cas.state as DecimalType).intValue).toString("dd.MM.yyyy"))
+			/*nadrz4 = createTimer(now.plusSeconds((kva_sklep_cas.state as DecimalType).intValue)) [|
+				sendCommand(Ventil_SKLEPo_4, ON)
+			]*/
+		}
+	}
+	sendCommand(Cerpadlo_spilka, ON)
+	postUpdate(dokvaseni, OFF)
+end
+
+rule Spilka_to_Sklep_hotovo
+when
+	Item Spilka_n1_objem changed to 0 or
+	Item Spilka_n2_objem changed to 0
+then	
+	if (Ventil_SPo_1.state == ON) sendCommand(Ventil_SPo_1, OFF)
+	if (Ventil_SPo_2.state == ON) sendCommand(Ventil_SPo_2, OFF)
+	
+	if (Ventil_SKLEPi_1.state == ON) sendCommand(Ventil_SKLEPi_1, OFF)
+	if (Ventil_SKLEPi_2.state == ON) sendCommand(Ventil_SKLEPi_2, OFF)
+	if (Ventil_SKLEPi_3.state == ON) sendCommand(Ventil_SKLEPi_3, OFF)
+	if (Ventil_SKLEPi_4.state == ON) sendCommand(Ventil_SKLEPi_4, OFF)
+	
+	sendCommand(Cerpadlo_spilka, OFF)
 end
 
 
@@ -75,106 +428,156 @@ then
 			}
 		}
 	}
+	// Scezovani
+	if (sce_on.state == ON) {
+		if (sceFaze.state == 0) {
+			if (RMVP_objem.state <= 0) {
+				sendCommand(Cerpadlo_varna, OFF)
+				sendCommand(Ventil_RMVPo, OFF)
+				sendCommand(Ventil_SKi, OFF)
+				sendCommand(sceFaze, 1)
+			}
+		}
+	}
+	// Chlazeni
+	if (chl_on.state == ON) {
+		if (chlFaze.state == 1) {
+			if (RMVP_objem.state <= 0) {
+				sendCommand(Cerpadlo_varna, OFF)
+				sendCommand(Ventil_RMVPo, OFF)
+				sendCommand(Ventil_mladina, OFF)
+				if (Ventil_SPi_1.state == ON) sendCommand(Ventil_SPi_1, OFF)
+				if (Ventil_SPi_2.state == ON) sendCommand(Ventil_SPi_2, OFF)
+				sendCommand(chlFaze, 2)
+			}
+		}
+	}
 end
 
 rule RMVP_teplota
 when
-	Item RMVP_teplota changed
+	Item RMVP_teplota changed or 
+	Item RMVP_cilovaTeplota changed
 then
+	if (RMVP_teplota.state instanceof DecimalType &&  RMVP_teplota.state >= RMVP_cilovaTeplota.state as DecimalType) {
+		sendCommand(RMVP_ohrev, OFF)
+	}
+	else if (RMVP_ohrev.state == OFF) {
+		sendCommand(RMVP_ohrev, ON)
+	}
+	
 	// Vystirani
 	if (vys_on.state == ON) {
-		if (vysFaze.state == 1) { 
-			if (RMVP_teplota.state >= vys_teplota_1.state as DecimalType) {
+		if (vysFaze.state == 1 || vysFaze.state == 4) { 
+			if (RMVP_teplota.state >= RMVP_cilovaTeplota.state as DecimalType) {
 				sendCommand(RMVP_ohrev, OFF)
-				sendCommand(vysFaze, 2)
+				sendCommand(vysFaze, vysFaze.state as DecimalType + 1)
 			}
 		}
-		else if (vysFaze.state == 2 || vysFaze.state == 3) { 
-			if (RMVP_teplota.state >= vys_teplota_1.state as DecimalType) {
+	}
+	// Rmutovani
+	if (rmu_on.state == ON) {
+		if (rmuFaze.state == 1 || rmuFaze.state == 3 || rmuFaze.state == 5 || rmuFaze.state == 8 
+			|| rmuFaze.state == 10 || rmuFaze.state == 12 || rmuFaze.state == 15 ) {
+			if (RMVP_teplota.state >= RMVP_cilovaTeplota.state as DecimalType) {
 				sendCommand(RMVP_ohrev, OFF)
-			}
-			else if (RMVP_ohrev.state == OFF) {
-				sendCommand(RMVP_ohrev, ON)
+				sendCommand(rmuFaze, rmuFaze.state as DecimalType + 1)
 			}
 		}
-		else if (vysFaze.state == 4) {
-			if (RMVP_teplota.state >= vys_teplota_2.state as DecimalType) {
+	}
+	// Chmnelovar
+	if (chm_on.state == ON) {
+		if (chmFaze.state == 0) {
+			if (RMVP_teplota.state >= RMVP_cilovaTeplota.state as DecimalType) {
 				sendCommand(RMVP_ohrev, OFF)
-				sendCommand(vysFaze, 5)
-			}
-		}
-		else if (vysFaze.state == 5) {	
-			if (RMVP_teplota.state >= vys_teplota_2.state as DecimalType) {
-				sendCommand(RMVP_ohrev, OFF)
-			}
-			else if (RMVP_ohrev.state == OFF) {
-				sendCommand(RMVP_ohrev, ON)
+				sendCommand(chmFaze, 1)
 			}
 		}
 	}
 end
 
-
-
-/*
-rule Temperature
+rule SK_objem
 when
-	Item Set changed or 
-	Item Temperature changed
+	Item SK_objem changed
 then
-	var Number temperature
-	
-	if (Temperature.state instanceof DecimalType) {
-		temperature = Temperature.state as DecimalType
-	} 
+	// Rmutovani
+	if (rmu_on.state == ON) {
+		if (rmuFaze.state == 0 || rmuFaze.state == 9) {
+			if (SK_objem.state >= dveTretiny) {
+				sendCommand(Cerpadlo_varna, OFF)
+				sendCommand(Ventil_RMVPo, OFF)
+				sendCommand(Ventil_SKi, OFF)
+				sendCommand(rmuFaze, rmuFaze.state as DecimalType + 1)
+			}
+		}
+		else if (rmuFaze.state == 7 || rmuFaze.state == 14) {
+			if (SK_objem.state <= 0) {
+				sendCommand(Cerpadlo_varna, OFF)
+				sendCommand(Ventil_RMVPi, OFF)
+				sendCommand(Ventil_SKo, OFF)
+				sendCommand(rmuFaze, rmuFaze.state as DecimalType + 1)
+			}
+		}
+	}
+	// Scezovani
+	if (sce_on.state == ON) {
+		if (sceFaze.state == 2) {
+			if (SK_objem.state <= 0) {
+				sendCommand(Cerpadlo_varna, OFF)
+				sendCommand(Ventil_RMVPi, OFF)
+				sendCommand(Ventil_SKo, OFF)
+				sendCommand(sceFaze, 3)
+			}
+		}
+	}
+end
+
+rule Chladic_teplota
+when
+	Item Chladic_teplota changed or 
+	Item chl_on changed to ON
+then
+	if (chl_on.state == ON) {
+		if (chlFaze.state == 0) { 
+			if (Chladic_teplota.state <= chl_teplota.state as DecimalType) {
+				sendCommand(Chladic_zapnuto, OFF)
+				sendCommand(chlFaze, 1)
+			}
+		}
+		if (Chladic_teplota.state <= chl_teplota.state as DecimalType) {
+			sendCommand(Chladic_zapnuto, OFF)
+		}
+		else if (Chladic_zapnuto.state instanceof OnOffType && Chladic_zapnuto.state != ON) {
+			sendCommand(Chladic_zapnuto, ON)
+		}
+	}
+end
+
+rule Kvaseni_klima
+when
+	Item Spilka_teplota changed or 
+	Item Sklep_teplota changed
+then
+	if (Spilka_n1_objem.state > 0 || Spilka_n2_objem.state > 0) { // bezi kvaseni
+		if (Spilka_teplota.state instanceof DecimalType &&  Spilka_teplota.state <= kva_spilka_teplota.state as DecimalType) {
+			sendCommand(Spilka_klima, OFF)
+		}
+		else if (Spilka_klima.state != ON) {
+			sendCommand(Spilka_klima, ON)
+		}
+	}
 	else {
-		temperature = 0
+		sendCommand(Spilka_klima, OFF)
 	}
-	
-	var Number setpoint = Set.state as DecimalType
-	var Number set = 0
-	
-	if (setpoint - temperature > 1) {
-		set = 2
-	} else if (setpoint - temperature < -1) {
-		set = 0
-	} else {
-		set = 1
+	if (Sklep_n1_objem.state > 0 || Sklep_n2_objem.state > 0 || Sklep_n3_objem.state > 0 || Sklep_n3_objem.state > 0) {
+		if (Sklep_teplota.state instanceof DecimalType &&  Sklep_teplota.state <= kva_sklep_teplota.state as DecimalType) {
+			sendCommand(Sklep_klima, OFF)
+		}
+		else if (Sklep_klima.state != ON) {
+			sendCommand(Sklep_klima, ON)
+		}
 	}
-	
-	if (Control.state != set) {
-		sendCommand(Control, set)
+	else {
+		sendCommand(Sklep_klima, OFF)
 	}
 end
-*/
-/*
-rule DowJones
-when
-	Item DowJones received update
-then
-	setFloatJones( doConvert(DowJones.state.toString()) )
-		
-	sendCommand(Pom, valueIncreased)
-	sendCommand(DowJonesString, calcChange)
-end
-*/
-/* 
-rule "Crontest"
-when 
-	Time cron "0/15 * * * * ?"
-then
-	doZkouska("pocitam... " + counter)
-	
-	sendCommand(TestS, "s"+counter)
-	sendCommand(num, counter)
-	
-	counter = counter + 1
-end	
- 
-rule TestString
-when
-	Item TestS received update
-then
-	doZkouska("TestS updatovan: " + TestS.state)
-end
-*/

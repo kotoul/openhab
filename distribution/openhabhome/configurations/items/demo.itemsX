@@ -1,9 +1,0 @@
-Group all
-Group date
-
-DateTime Date "Date and Time: [%1$tA, %1$td.%1$tm.%1$tY]" (date) { ntp="Europe/Prague" }
-
-Number Temperature "Teplota [%d °C]" <temperature> (all) { xbee="<[rxresponse16@0002#0[int]]" }
-
-Number Set "Setpoint [%d °C]" <smiley> (all) 
-Number Control "control [%d]" <smiley> (all) { xbee=">[0:txrequest16@0003#0] >[1:txrequest16@0003#1] >[2:txrequest16@0003#2]" }

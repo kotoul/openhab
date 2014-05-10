@@ -158,7 +158,8 @@ public class XBeeBinding extends AbstractBinding<XBeeBindingProvider> implements
 			TxRequest16 request = new TxRequest16((XBeeAddress16) address, payload);
 			// logger.debug("sending [request={}]", request);
 			try {
-				xbee.sendAsynchronous(request);
+				xbee.sendSynchronous(request, 1000);
+				logger.debug("Response to request received");
 			} catch (XBeeException e) {
 				logger.debug("ERROR: ", e);
 			}

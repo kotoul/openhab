@@ -1,56 +1,145 @@
 sitemap default label="Main Menu"
 {
-	Frame label="Konfigurace" {
-		Text label="Vystírání" icon="icon16x16" {
+	Frame {
+		Text label="Konfigurace" icon="icon16x16" {
 			Frame {
-				Setpoint item=vys_slad minValue=1 maxValue=50 step=1
-				Setpoint item=vys_voda minValue=1 maxValue=50 step=1
-				Setpoint item=vys_teplota_1 minValue=30 maxValue=40 step=1
-				Setpoint item=vys_cas_1 minValue=5 maxValue=10 step=1
-				Setpoint item=vys_teplota_2 minValue=50 maxValue=60 step=1
-				Setpoint item=vys_cas_2 minValue=20 maxValue=25 step=1
+				Text label="Vystírání" icon="icon16x16" {
+					Frame {
+						Setpoint item=vys_slad minValue=1 maxValue=50 step=1
+						Setpoint item=vys_voda minValue=1 maxValue=50 step=1
+						Setpoint item=vys_teplota_1 minValue=30 maxValue=40 step=1
+						Setpoint item=vys_cas_1 minValue=5 maxValue=10 step=1
+						Setpoint item=vys_teplota_2 minValue=50 maxValue=60 step=1
+						Setpoint item=vys_cas_2 minValue=20 maxValue=25 step=1
+					}
+				}
+				Text label="Rmutování" icon="icon16x16" {
+					Frame {
+						Setpoint item=rmu_teplota_1 minValue=55 maxValue=65 step=1
+						Setpoint item=rmu_teplota_2 minValue=65 maxValue=75 step=1
+						Setpoint item=rmu_teplota_3 minValue=70 maxValue=80 step=1
+						Setpoint item=rmu_teplota_r1 minValue=55 maxValue=70 step=1
+						Setpoint item=rmu_cas_11 minValue=15 maxValue=25 step=1
+						Setpoint item=rmu_cas_12 minValue=15 maxValue=25 step=1
+						Setpoint item=rmu_cas_21 minValue=25 maxValue=30 step=1
+						Setpoint item=rmu_cas_22 minValue=25 maxValue=35 step=1
+						Setpoint item=rmu_var minValue=90 maxValue=100 step=1
+						Setpoint item=rmu_cas_var minValue=10 maxValue=15 step=1
+					}
+				}
+				Text label="Scezování" icon="icon16x16" {
+					Frame {
+						Setpoint item=sce_cas minValue=10 maxValue=50 step=1
+					}
+				}
+				Text label="Chmelovar" icon="icon16x16" {
+					Frame {
+						Setpoint item=chm_cas minValue=30 maxValue=90 step=1
+						Setpoint item=chm_teplota minValue=90 maxValue=100 step=1
+					}
+				}
+				Text label="Chlazení" icon="icon16x16" {
+					Frame {
+						Setpoint item=chl_teplota minValue=0 maxValue=10 step=1
+					}
+				}
+				Text label="Kvašení" icon="icon16x16" {
+					Frame {
+						Setpoint item=kva_spilka_teplota minValue=0 maxValue=10 step=1
+						Setpoint item=kva_sklep_teplota minValue=0 maxValue=10 step=1
+						Setpoint item=kva_sachmetr1 minValue=0 maxValue=10 step=1
+						Setpoint item=kva_sachmetr2 minValue=0 maxValue=10 step=1
+						Setpoint item=kva_sklep_cas minValue=20 maxValue=60 step=1
+					}
+				}
 			}
 			Frame {
-				Switch item=vys_on visibility=[ vys_on=="Uninitialized", rmu_on==OFF ]
-			}
-		}
-		Text label="Rmutování" icon="icon16x16" {
-			Frame {
-				Setpoint item=rmu_teplota_1 minValue=55 maxValue=65 step=1
-				Setpoint item=rmu_cas_11 minValue=15 maxValue=25 step=1
-				Setpoint item=rmu_teplota_2 minValue=65 maxValue=75 step=1
-				Setpoint item=rmu_cas_12 minValue=15 maxValue=25 step=1
-				Setpoint item=rmu_cas_21 minValue=25 maxValue=30 step=1
-				Setpoint item=rmu_teplota_3 minValue=70 maxValue=80 step=1
-				Setpoint item=rmu_cas_22 minValue=25 maxValue=35 step=1
-				Setpoint item=rmu_var minValue=90 maxValue=100 step=1
-				Setpoint item=rmu_cas_var minValue=10 maxValue=15 step=1
-			}
-			Frame {
-				Switch item=rmu_on visibility=[ rmu_on=="Uninitialized", vys_on==OFF ]
+				Switch item=reInit label="Načíst defaultní hodnoty"
 			}
 		}
 	}	
+	Frame label="Start varna" {
+		Selection item=kva_spilka_vyber mappings=[ 0="-", 1="Nádrž 1", 2="Nádrž 2" ] visibility=[ chl_on==OFF ]
+		Selection item=kva_sklep_vyber1 mappings=[ 0="-", 1="Nádrž 1", 2="Nádrž 2", 3="Nádrž 3", 4="Nádrž 4" ] visibility=[ kva_spilka_vyber==1 ]
+		Selection item=kva_sklep_vyber2 mappings=[ 0="-", 1="Nádrž 1", 2="Nádrž 2", 3="Nádrž 3", 4="Nádrž 4" ] visibility=[ kva_spilka_vyber==2 ]
+		Switch item=vys_on
+		Switch item=rmu_on
+		Switch item=sce_on
+		Switch item=chm_on
+		Switch item=chl_on
+	}
 	Frame label="Monitoring" {
-		Group item=all label="Vše" icon="fire-on"
-		Group item=varna label="Varna" icon="heating"
-		Group item=zrani label="Zrání" icon="firstfloor"
+		Text label="Varna" icon="heating" {
+			Frame label="RMVP" {
+				Text item=RMVP_teplota
+				Text item=RMVP_objem
+				Text item=RMVP_ohrev valuecolor=[ RMVP_ohrev==ON="green", RMVP_ohrev==OFF="red"]
+				Text item=RMVP_michani valuecolor=[ RMVP_michani==ON="green", RMVP_michani==OFF="red"]
+				Text item=RMVP_poklice valuecolor=[ RMVP_poklice==ON="green", RMVP_poklice==OFF="red"]
+			}
+			Frame label="SK" {
+				Text item=SK_teplota
+				Text item=SK_objem
+			}
+			Frame {
+				Text item=Chladic_teplota
+			}
+		}
+		Text label="Zrání" icon="firstfloor" {
+			Frame label="Teploty" { 
+				Text item=Spilka_teplota
+				Text item=Spilka_klima valuecolor=[ Spilka_klima==ON="green", Spilka_klima==OFF="red"]
+				Text item=Sklep_teplota
+				Text item=Sklep_klima valuecolor=[ Sklep_klima==ON="green", Sklep_klima==OFF="red"]
+			}
+			Frame label="Spilka - nádrže" {
+				Text item=Spilka_n1_objem
+				Text item=Spilka_sachmetr1
+				Text item=Spilka_n2_objem
+				Text item=Spilka_sachmetr2
+			}
+			Frame label="Sklep - nádrže" {
+				Text item=Sklep_n1_objem
+				Text item=kva_sklep_n1_start
+				Text item=kva_sklep_n1_cil
+				Text item=Sklep_n2_objem
+				Text item=kva_sklep_n2_start
+				Text item=kva_sklep_n2_cil
+				Text item=Sklep_n3_objem
+				Text item=kva_sklep_n3_start
+				Text item=kva_sklep_n3_cil
+				Text item=Sklep_n4_objem
+				Text item=kva_sklep_n4_start
+				Text item=kva_sklep_n4_cil
+			}
+		}
+	}
+	Frame label="Všechny ovládací prvky a čidla - ruční ovládání" {
+		Group item=varna label="Varna - vše" icon="icon16x16"
+		Group item=zrani label="Zrání - vše" icon="icon16x16"
+	}
+	Frame label="Debug" {
+		Text label="Faze" icon="icon16x16" {
+			Frame {
+				Switch item=vys_on //visibility=[ vys_on=="Uninitialized", rmu_on==OFF ]
+				Selection item=vysFaze mappings=[ 0="0" ]
+			}
+			Frame {
+				Switch item=rmu_on //visibility=[ rmu_on=="Uninitialized", vys_on==OFF ]
+				Selection item=rmuFaze mappings=[ 0="0" ]
+			}
+			Frame {
+				Switch item=sce_on //visibility=[ rmu_on=="Uninitialized", vys_on==OFF ]
+				Selection item=sceFaze mappings=[ 0="0" ]
+			}
+			Frame {
+				Switch item=chm_on //visibility=[ rmu_on=="Uninitialized", vys_on==OFF ]
+				Selection item=chmFaze mappings=[ 0="0" ]
+			}
+			Frame {
+				Switch item=chl_on //visibility=[ rmu_on=="Uninitialized", vys_on==OFF ]
+				Selection item=chlFaze mappings=[ 0="0" ]
+			}
+		}
 	}
 }
-/*
-sitemap demo label="Main Menu"
-{
-	Frame label="Test Temperature" {
-		//Text item=DowJones
-		//Text item=DowJonesString valuecolor=[Pom==-1="red",Pom==1="green"]
-		Setpoint item=Set step=5 minValue=0 maxValue=120
-		Text item=Temperature
-	}
-	Frame label="0-STOP, 1-KEEP, 2-ON" {
-		Text item=Control valuecolor=[Control==0="red",Control==1="blue",Control==2="green"]
-	}
-	Frame label="Date" {
-		Text item=Date icon="calendar"
-	}
-}
-*/

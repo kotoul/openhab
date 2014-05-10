@@ -1,11 +1,12 @@
-const int DELAY = 200;
+const int DELAY = 100;
 const int SECOND = 1000/DELAY; // pocet iteraci do sekundy
 int clock = 0; // pocita sekundy
 
 const int odparMax = 10;
 int odpar = 0;
 
-boolean kvasnice = false;
+boolean kvasnice1 = false;
+boolean kvasnice2 = false;
 
 const char delim = '_';
 
@@ -28,42 +29,66 @@ typedef struct Switch {
 
 //water
 Value water_o =          { "---",  1, 499, 0, 1,  1,  999 };
-Value water_t =          { "---",  1, 15, 0, 1,  1,  100 };
+Value water_t =          { "---",  1,  15, 0, 1,  1,  100 };
+Value sachmetr_1_z =     { "---",  1, 499, 0, 1,  1,  999 };
+Value sachmetr_2_z =     { "---",  1, 499, 0, 1,  1,  999 };
 
 //outs
-Value RMVP_teplota =     { "rmt",  1, 0, 0, 1,  30, 200 };
+Value RMVP_teplota =     { "rmt",  1, 0, 0, 1,  10, 200 };
 Value RMVP_objem =       { "rmo",  1, 0, 0, 1,  1,  100 };
-Value SK_teplota =       { "skt",  1, 0, 0, 1,  30, 200 };
+Value SK_teplota =       { "skt",  1, 0, 0, 1,  10, 200 };
 Value SK_objem =         { "sko",  1, 0, 0, 1,  1,  100 };
-Value Chladic_teplota =  { "cht", -1, 0, 0, 2,  30, 40 };
-Value Spilka_teplota =   { "spt", -1, 0, 0, 4,  50, 40 };
-Value Spilka_objem =     { "spo",  1, 0, 0, 1,  1,  100 };
-Value Spilka_sachmetr =  { "sps",  1, 0, 0, 10, 10, 100 };
-Value Sklep_teplota =    { "slt", -1, 0, 0, 4,  50, 40 };
-Value Sklep_objem =      { "slo",  1, 0, 0, 1,  1,  100 };
+Value Chladic_teplota =  { "cht", -1, 5, 0, 2,  30, 40 };
+Value Spilka_teplota =   { "spt", -1, 5, 0, 4,  50, 40 };
+Value Spilka_n1_objem =  { "sp1",  1, 0, 0, 1,  1,  110 };
+Value Spilka_n2_objem =  { "sp2",  1, 0, 0, 1,  1,  110 };
+Value Spilka_sachmetr1 = { "sc1", -1, 30, 0, 5, 5,  35 };
+Value Spilka_sachmetr2 = { "sc2", -1, 30, 0, 5, 5,  35 };
+Value Sklep_teplota =    { "slt", -1, 5, 0, 4,  50, 40 };
+Value Sklep_n1_objem =   { "sl1",  1, 0, 0, 1,  1,  110 };
+Value Sklep_n2_objem =   { "sl2",  1, 0, 0, 1,  1,  110 };
+Value Sklep_n3_objem =   { "sl3",  1, 0, 0, 1,  1,  110 };
+Value Sklep_n4_objem =   { "sl4",  1, 0, 0, 1,  1,  110 };
 
 //ins
-Switch RMVP_ohrev =       { "ro", false };
-Switch RMVP_michani =     { "rm", false };
-Switch RMVP_poklice =     { "rp", false };
-Switch RMVP_slad =        { "rn", false };
-Switch Chladic_zapnuto =  { "cc", false };
-Switch Spilka_klima =     { "sc", false };
-Switch Sklep_klima =      { "sl", false };
-Switch Cerpadlo_varna =   { "cv", false };
-Switch Cerpadlo_spilka =  { "cs", false };
-Switch Ventil_voda_SK =   { "vs", false };
-Switch Ventil_voda_RMVP = { "vr", false };
-Switch Ventil_SKi =       { "si", false };
-Switch Ventil_RMVPi =     { "ri", false };
-Switch Ventil_SKo =       { "so", false };
-Switch Ventil_RMVPo =     { "rv", false };
-Switch Ventil_SKo_s =     { "ss", false };
-Switch Ventil_RMVP_h =    { "rh", false };
-Switch Ventil_mladina =   { "ml", false };
-Switch Ventil_kvasnice =  { "kv", false };
-Switch Ventil_spilka =    { "sp", false };
+#define numSwitches 32
+Switch switches[numSwitches] = {
+  { "ro", false }, //0 RMVP_ohrev
+  { "rm", false }, //1 RMVP_michani
+  { "rp", false }, //2 RMVP_poklice
+  { "rn", false }, //3 RMVP_slad
+  { "cc", false }, //4 Chladic_zapnuto
+  { "sc", false }, //5 Spilka_klima
+  { "sl", false }, //6 Sklep_klima
+  { "cv", false }, //7 Cerpadlo_varna
+  { "cs", false }, //8 Cerpadlo_spilka
+  { "vs", false }, //9 Ventil_voda_SK
+  { "vr", false }, //10 Ventil_voda_RMVP
+  { "si", false }, //11 Ventil_SKi
+  { "ri", false }, //12 Ventil_RMVPi
+  { "so", false }, //13 Ventil_SKo
+  { "rv", false }, //14 Ventil_RMVPo
+  { "ss", false }, //15 Ventil_SKo_s
+  { "rh", false }, //16 Ventil_RMVP_h
+  { "ml", false }, //17 Ventil_mladina
+  { "a1", false }, //18 Ventil_SPi_1
+  { "a2", false }, //19 Ventil_SPi_2
+  { "k1", false }, //20 Ventil_kvasnice1
+  { "k2", false }, //21 Ventil_kvasnice2
+  { "b1", false }, //22 Ventil_SPo_1
+  { "b2", false }, //23 Ventil_SPo_2
+  { "c1", false }, //24 Ventil_SKLEPi_1
+  { "c2", false }, //25 Ventil_SKLEPi_2
+  { "c3", false }, //26 Ventil_SKLEPi_3
+  { "c4", false }, //27 Ventil_SKLEPi_4
+  { "d1", false }, //28 Ventil_SKLEPo_1
+  { "d2", false }, //29 Ventil_SKLEPo_2
+  { "d3", false }, //30 Ventil_SKLEPo_3
+  { "d4", false }  //31 Ventil_SKLEPo_4
+};
 
+void doKvasnice(Switch& sw, boolean& kvasnice, Value& nadrz);
+void doSachmetr(int obj, boolean& kvasnice, Value& sachmetr, Value& zdroj);
 void doLiquid(Value& from, Value& to, Value& temp_from, Value& temp_to);
 void doTemperature(Value& val, boolean on);
 void sendMsg(char head[], int message);
@@ -78,34 +103,73 @@ void loop() {
   
   if (isSecond()) {
     // teploty
-    doTemperature(RMVP_teplota, RMVP_ohrev.value);
+    doTemperature(RMVP_teplota, switches[0].value);
     doTemperature(SK_teplota, false);
-    doTemperature(Chladic_teplota, Chladic_zapnuto.value);
-    doTemperature(Spilka_teplota, Spilka_klima.value);
-    doTemperature(Sklep_teplota, Sklep_klima.value);
+    doTemperature(Chladic_teplota, switches[4].value);
+    doTemperature(Spilka_teplota, switches[5].value);
+    doTemperature(Sklep_teplota, switches[6].value);
     
     // objemy - cerpani
-    if (Ventil_voda_RMVP.value || RMVP_slad.value) { // slad funguje jako voda
+    if (switches[10].value || switches[3].value) { // slad funguje jako voda
       doLiquid(water_o, RMVP_objem, water_t, RMVP_teplota);
     }
-    else if (Ventil_voda_SK.value) {
+    else if (switches[9].value) {
       doLiquid(water_o, SK_objem, water_t, SK_teplota);
     }
-    else if (Ventil_SKi.value && (Ventil_RMVPo.value || Ventil_RMVP_h.value) && Cerpadlo_varna.value) {
+    
+    if (switches[11].value && (switches[14].value || switches[16].value) && switches[7].value) {
       doLiquid(RMVP_objem, SK_objem, RMVP_teplota, SK_teplota);
     }
-    else if ((Ventil_SKo.value || Ventil_SKo_s.value) && Ventil_RMVPi.value && Cerpadlo_varna.value) {
+    else if ((switches[13].value || switches[15].value) && switches[12].value && switches[7].value) {
       doLiquid(SK_objem, RMVP_objem, SK_teplota, RMVP_teplota);
     }
-    else if ((Ventil_RMVPo.value || Ventil_RMVP_h.value) && Ventil_mladina.value && Cerpadlo_varna.value) {
-      doLiquid(RMVP_objem, Spilka_objem, water_t, water_t);
+    else if ((switches[14].value || switches[16].value) && switches[17].value && switches[18].value && switches[7].value) {
+      doLiquid(RMVP_objem, Spilka_n1_objem, water_t, water_t);
     }
-    else if (Ventil_spilka.value && Cerpadlo_spilka.value) {
-      doLiquid(Spilka_objem, Sklep_objem, water_t, water_t);
+    else if ((switches[14].value || switches[16].value) && switches[17].value && switches[19].value && switches[7].value) {
+      doLiquid(RMVP_objem, Spilka_n2_objem, water_t, water_t);
+    }
+    
+    if (switches[22].value && switches[24].value && switches[8].value) {
+      doLiquid(Spilka_n1_objem, Sklep_n1_objem, water_t, water_t);
+    }
+    else if (switches[22].value && switches[25].value && switches[8].value) {
+      doLiquid(Spilka_n1_objem, Sklep_n2_objem, water_t, water_t);
+    }
+    else if (switches[22].value && switches[26].value && switches[8].value) {
+      doLiquid(Spilka_n1_objem, Sklep_n3_objem, water_t, water_t);
+    }
+    else if (switches[22].value && switches[27].value && switches[8].value) {
+      doLiquid(Spilka_n1_objem, Sklep_n4_objem, water_t, water_t);
+    }
+    else if (switches[23].value && switches[24].value && switches[8].value) {
+      doLiquid(Spilka_n2_objem, Sklep_n1_objem, water_t, water_t);
+    }
+    else if (switches[23].value && switches[25].value && switches[8].value) {
+      doLiquid(Spilka_n2_objem, Sklep_n2_objem, water_t, water_t);
+    }
+    else if (switches[23].value && switches[26].value && switches[8].value) {
+      doLiquid(Spilka_n2_objem, Sklep_n3_objem, water_t, water_t);
+    }
+    else if (switches[23].value && switches[27].value && switches[8].value) {
+      doLiquid(Spilka_n2_objem, Sklep_n4_objem, water_t, water_t);
+    }
+    
+    if (switches[28].value) {
+      doLiquid(Sklep_n1_objem, water_o, water_t, water_t);
+    }
+    else if (switches[29].value) {
+      doLiquid(Sklep_n2_objem, water_o, water_t, water_t);
+    }
+    else if (switches[30].value) {
+      doLiquid(Sklep_n3_objem, water_o, water_t, water_t);
+    }
+    else if (switches[31].value) {
+      doLiquid(Sklep_n4_objem, water_o, water_t, water_t);
     }
     
     // odpar
-    if (RMVP_teplota.value > 90 && RMVP_objem.value > 1 && RMVP_poklice.value) {
+    if (RMVP_teplota.value > 90 && RMVP_objem.value > 1 && switches[2].value) {
       odpar += 1;
       if (odpar >= odparMax) {
         odpar = 0;
@@ -115,29 +179,16 @@ void loop() {
     }
     
     // sacharometr - principielne funguje jako doLiquid
-    if (Spilka_objem.value > 1 && kvasnice) {
-      doLiquid(water_o, Spilka_sachmetr, water_t, water_t);
-    }
-    else {
-      int prev = Spilka_sachmetr.value;
-      Spilka_sachmetr.value = 0;
-      if (prev != Spilka_sachmetr.value) {
-        kvasnice = false;
-        sendMsg(Spilka_sachmetr.name, Spilka_sachmetr.value);
-      }
-    }
-    
+    doSachmetr(Spilka_n1_objem.value, kvasnice1, Spilka_sachmetr1, sachmetr_1_z);
+    doSachmetr(Spilka_n2_objem.value, kvasnice2, Spilka_sachmetr2, sachmetr_2_z);
+        
     // kvasnice
-    if (Ventil_kvasnice.value) {
-      if (Spilka_objem.value + 1 <= Spilka_objem.maxVal) {
-        Spilka_objem.value += 1;
-        kvasnice = true;
-        Ventil_kvasnice.value = false;
-        sendMsg(Spilka_objem.name, Spilka_objem.value);
-      }
-    };
+    doKvasnice(switches[20], kvasnice1, Spilka_n1_objem);
+    doKvasnice(switches[21], kvasnice2, Spilka_n2_objem);
     
     water_o.value = 499; // neomezeny zdroj vody
+    sachmetr_1_z.value = 499;
+    sachmetr_2_z.value = 499;
   }
   
   //input
@@ -145,65 +196,36 @@ void loop() {
     for(int i = 0; i < 3; i++) {
       inString[i] = Serial.read();
     }
-    if ( strstr(inString, RMVP_ohrev.name) != NULL ) { 
-      RMVP_ohrev.value = inString[2] == 'a';
+    for(int i = 0; i < numSwitches; i++) {
+      if ( strstr(inString, switches[i].name) != NULL ) { 
+        switches[i].value = inString[2] == 'a';
+      }
     }
-    else if ( strstr(inString, RMVP_michani.name) != NULL ) { 
-      RMVP_michani.value = inString[2] == 'a';
+  }
+}
+
+
+void doKvasnice(Switch& sw, boolean& kvasnice, Value& nadrz) {
+  if (sw.value) {
+      if (nadrz.value + 1 <= nadrz.maxVal) {
+        nadrz.value += 1;
+        kvasnice = true;
+        sw.value = false;
+        sendMsg(nadrz.name, nadrz.value);
+      }
     }
-    else if ( strstr(inString, Chladic_zapnuto.name) != NULL ) { 
-      Chladic_zapnuto.value = inString[2] == 'a';
-    }
-    else if ( strstr(inString, Spilka_klima.name) != NULL ) { 
-      Spilka_klima.value = inString[2] == 'a';
-    }
-    else if ( strstr(inString, Sklep_klima.name) != NULL ) { 
-      Sklep_klima.value = inString[2] == 'a';
-    }
-    else if ( strstr(inString, RMVP_poklice.name) != NULL ) { 
-      RMVP_poklice.value = inString[2] == 'a';
-    }
-    else if ( strstr(inString, RMVP_slad.name) != NULL ) { 
-      RMVP_slad.value = inString[2] == 'a';
-    }
-    else if ( strstr(inString, Cerpadlo_varna.name) != NULL ) { 
-      Cerpadlo_varna.value = inString[2] == 'a';
-    }
-    else if ( strstr(inString, Cerpadlo_spilka.name) != NULL ) { 
-      Cerpadlo_spilka.value = inString[2] == 'a';
-    }
-    else if ( strstr(inString, Ventil_voda_SK.name) != NULL ) { 
-      Ventil_voda_SK.value = inString[2] == 'a';
-    }
-    else if ( strstr(inString, Ventil_voda_RMVP.name) != NULL ) { 
-      Ventil_voda_RMVP.value = inString[2] == 'a';
-    }
-    else if ( strstr(inString, Ventil_SKi.name) != NULL ) { 
-      Ventil_SKi.value = inString[2] == 'a';
-    }
-    else if ( strstr(inString, Ventil_RMVPi.name) != NULL ) { 
-      Ventil_RMVPi.value = inString[2] == 'a';
-    }
-    else if ( strstr(inString, Ventil_SKo.name) != NULL ) { 
-      Ventil_SKo.value = inString[2] == 'a';
-    }
-    else if ( strstr(inString, Ventil_RMVPo.name) != NULL ) { 
-      Ventil_RMVPo.value = inString[2] == 'a';
-    }
-    else if ( strstr(inString, Ventil_SKo_s.name) != NULL ) { 
-      Ventil_SKo_s.value = inString[2] == 'a';
-    }
-    else if ( strstr(inString, Ventil_RMVP_h.name) != NULL ) { 
-      Ventil_RMVP_h.value = inString[2] == 'a';
-    }
-    else if ( strstr(inString, Ventil_mladina.name) != NULL ) { 
-      Ventil_mladina.value = inString[2] == 'a';
-    }
-    else if ( strstr(inString, Ventil_kvasnice.name) != NULL ) { 
-      Ventil_kvasnice.value = inString[2] == 'a';
-    }
-    else if ( strstr(inString, Ventil_spilka.name) != NULL ) { 
-      Ventil_spilka.value = inString[2] == 'a';
+}
+
+void doSachmetr(int obj, boolean& kvasnice, Value& sachmetr, Value& zdroj) {
+  if (obj > 1 && kvasnice) {
+      doLiquid(zdroj, sachmetr, water_t, water_t);
+  }
+  else {
+    int prev = sachmetr.value;
+    sachmetr.value = sachmetr.maxVal - 5;
+    if (prev != sachmetr.value) {
+      kvasnice = false;
+      sendMsg(sachmetr.name, sachmetr.value);
     }
   }
 }
@@ -213,7 +235,7 @@ void doLiquid(Value& from, Value& to, Value& temp_from, Value& temp_to) {
   Value pom = (from.work / from.on) > (to.work / to.on) ? to : from;
   if(from.counter >= pom.on) {
     from.counter = 0;
-    if (from.value - pom.work >= 0 && to.value + pom.work <= to.maxVal) {
+    if (from.value - pom.work >= 0 && to.value + pom.work <= to.maxVal) { 
       if (temp_from.value != temp_to.value) {
         temp_to.value += temp_from.value > temp_to.value ? 1 : -1;
         sendMsg(temp_to.name, temp_to.value);

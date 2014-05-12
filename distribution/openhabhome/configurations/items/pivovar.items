@@ -28,6 +28,9 @@ Switch Ventil_RMVPo "Ventil RMVP Out [%s]" <switch> (ventily, varna)				{ xbee="
 Switch Ventil_SKo_s "Ventil SK Out spodni [%s]" <switch> (ventily, varna)			{ xbee=">[ON:txrequest16@0002#ssa] >[OFF:txrequest16@0002#ssz]" }
 Switch Ventil_RMVP_h "Ventil RMVP Out horni [%s]" <switch> (ventily, varna)			{ xbee=">[ON:txrequest16@0002#rha] >[OFF:txrequest16@0002#rhz]" }
 Switch Ventil_mladina "Ventil Mladina [%s]" <switch> (ventily, varna)				{ xbee=">[ON:txrequest16@0002#mla] >[OFF:txrequest16@0002#mlz]" }
+Switch Ventil_RMVP_OUT "Ventil RMVP Vypustit [%s]" <switch> (ventily, varna)		{ xbee=">[ON:txrequest16@0002#xra] >[OFF:txrequest16@0002#xrz]" }
+Switch Ventil_SK_OUT "Ventil SK Vypustit [%s]" <switch> (ventily, varna)			{ xbee=">[ON:txrequest16@0002#xsa] >[OFF:txrequest16@0002#xsz]" }
+
 
 Switch reInit
 

@@ -51,7 +51,7 @@ Value Sklep_n3_objem =   { "sl3",  1, 0, 0, 1,  1,  110 };
 Value Sklep_n4_objem =   { "sl4",  1, 0, 0, 1,  1,  110 };
 
 //ins
-#define numSwitches 32
+#define numSwitches 34
 Switch switches[numSwitches] = {
   { "ro", false }, //0 RMVP_ohrev
   { "rm", false }, //1 RMVP_michani
@@ -84,7 +84,9 @@ Switch switches[numSwitches] = {
   { "d1", false }, //28 Ventil_SKLEPo_1
   { "d2", false }, //29 Ventil_SKLEPo_2
   { "d3", false }, //30 Ventil_SKLEPo_3
-  { "d4", false }  //31 Ventil_SKLEPo_4
+  { "d4", false }, //31 Ventil_SKLEPo_4
+  { "xr", false }, //32 Ventil_RMVP_OUT
+  { "xs", false }  //33 Ventil_SK_OUT
 };
 
 void doKvasnice(Switch& sw, boolean& kvasnice, Value& nadrz);
@@ -128,6 +130,12 @@ void loop() {
     }
     else if ((switches[14].value || switches[16].value) && switches[17].value && switches[19].value && switches[7].value) {
       doLiquid(RMVP_objem, Spilka_n2_objem, water_t, water_t);
+    }
+    else if (switches[32].value) {
+      doLiquid(RMVP_objem, water_o, water_t, water_t);
+    }
+    else if (switches[33].value) {
+      doLiquid(SK_objem, water_o, water_t, water_t);
     }
     
     if (switches[22].value && switches[24].value && switches[8].value) {

@@ -1,4 +1,4 @@
-sitemap default label="Main Menu"
+sitemap default label="Hlavní menu"
 {
 	Frame {
 		Text label="Konfigurace" icon="icon16x16" {
@@ -58,7 +58,7 @@ sitemap default label="Main Menu"
 			}
 		}
 	}	
-	Frame label="Start varna" {
+	Frame label="Start" {
 		Selection item=kva_spilka_vyber mappings=[ 0="-", 1="Nádrž 1", 2="Nádrž 2" ] visibility=[ chl_on==OFF ]
 		Selection item=kva_sklep_vyber1 mappings=[ 0="-", 1="Nádrž 1", 2="Nádrž 2", 3="Nádrž 3", 4="Nádrž 4" ] visibility=[ kva_spilka_vyber==1 ]
 		Selection item=kva_sklep_vyber2 mappings=[ 0="-", 1="Nádrž 1", 2="Nádrž 2", 3="Nádrž 3", 4="Nádrž 4" ] visibility=[ kva_spilka_vyber==2 ]
